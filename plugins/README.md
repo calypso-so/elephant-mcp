@@ -23,7 +23,6 @@ npm run validate -- --profile all          # validate only, writes nothing
 npm run validate -- --online --profile all # also fetches every external URL in manifests and skills
 npm test                                   # node --test over tests/plugin
 npm run lint                               # strict tsc, no emit
-npm run assets                             # regenerate the PNG icons and logos
 ```
 
 A build exits non-zero if any rule reports an error. Warnings (today: the missing `demo_recording_url`) do not fail the build. `--profile all` also writes `out/SHA256SUMS.txt`.
@@ -32,13 +31,13 @@ A build exits non-zero if any rule reports an error. Warnings (today: the missin
 
 ```
 profiles/
-  elephant/            plugin.config.json, skills/<name>/SKILL.md, assets/icon.png + logo.png
+  elephant/            plugin.config.json, skills/<name>/SKILL.md (assets come from shared/assets)
   elephant-builder/    same shape
 shared/
   plugin.config.json   parent config: author, URLs, brand colours, tool catalog, owned hosts, forbidden patterns
+  assets/              the Elephant logo (logo.png 1024) and icon (icon.png 512), shipped in every package
   skills/              templates rendered into <p>-get-started and <p>-status
 tools/plugin/          the packaging tool (one class per file)
-tools/assets/          the reproducible icon/logo generator
 tests/plugin/          node:test suites
 ```
 
@@ -80,7 +79,7 @@ tests/plugin/          node:test suites
 
 ### Assets
 
-`tools/assets/` draws the Elephant mark (front-facing elephant head with a curled trunk, Calypso palette: deep teal `#24414E`, paper `#F4F1E8`, ink `#171611`) with a small supersampling rasteriser and a minimal PNG encoder, with no image tools or platform renderers involved. `npm run assets` rewrites the four PNGs; a test checks that the committed files hold exactly the generated pixels. Elephant Builder's mark adds a "+" badge.
+`shared/assets/` holds the Elephant mascot: `logo.png` (1024×1024) and `icon.png` (512×512), both transparent PNGs scaled from the supplied artwork. Every profile ships these two files; a profile can replace one by placing a file of the same name in its own `assets/` folder. `ImageRule` checks size and shape, and a test checks that each package carries the shared files. To change the logo, replace both PNGs (keep them square and under 1 MB) and rebuild; the package hashes change with them.
 
 ## Changing a package
 

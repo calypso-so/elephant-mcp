@@ -75,11 +75,22 @@ export class ProfileLoader {
       throw new Error(`Profile directory "${name}" declares name "${resolved.name}"`);
     }
     const skills = new SkillSet([...this.overlaySkills(directory), ...this.templateSkills(resolved)]);
-    const assetsDirectory = join(directory, "assets");
-    const assets = DirectoryReader.exists(assetsDirectory)
-      ? DirectoryReader.read(assetsDirectory)
-      : new Map<string, Buffer>();
-    return new Profile(resolved, skills, assets, directory);
+    return new Profile(resolved, skills, this.assets(directory), directory);
+  }
+
+  /**
+   * The brand assets in `shared/assets`, with a profile's own `assets/` on
+   * top. Every package carries the one Elephant logo unless a profile
+   * deliberately ships a different file under the same name.
+   */
+  private assets(profileDirectory: string): Map<string, Buffer> {
+    const layers = [join(this.sharedDirectory, "assets"), join(profileDirectory, "assets")];
+    const merged = new Map<string, Buffer>();
+    for (const layer of layers) {
+      if (!DirectoryReader.exists(layer)) continue;
+      for (const [name, bytes] of DirectoryReader.read(layer)) merged.set(name, bytes);
+    }
+    return new Map([...merged.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   }
 
   private readConfig(path: string, seen: Set<string>): JsonObject {

@@ -11,7 +11,7 @@ describe("ProfileLoader", () => {
   it("merges the shared parent into each profile", () => {
     const profile = Fixtures.profile("elephant");
     assert.equal(profile.config.author.name, "Calypso");
-    assert.equal(profile.config.interface.brandColor, "#24414E");
+    assert.equal(profile.config.interface.brandColor, "#3B2622");
     assert.equal(profile.config.interface.displayName, "Elephant by Calypso");
     assert.deepEqual(profile.config.catalog.ownedHosts, [
       "calypso.so",

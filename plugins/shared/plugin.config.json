@@ -8,8 +8,8 @@
   "interface": {
     "developerName": "Calypso",
     "category": "Productivity",
-    "brandColor": "#24414E",
-    "brandColorDark": "#9CC3CF",
+    "brandColor": "#3B2622",
+    "brandColorDark": "#E9C4A8",
     "icon": "./assets/icon.png",
     "logo": "./assets/logo.png",
     "websiteURL": "https://www.calypso.so/elephant",

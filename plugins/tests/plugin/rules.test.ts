@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { ElephantMark } from "../../tools/assets/ElephantMark.js";
 import { ArchiveShapeRule } from "../../tools/plugin/rules/ArchiveShapeRule.js";
 import { BrandColorRule } from "../../tools/plugin/rules/BrandColorRule.js";
 import { ForbiddenTextRule } from "../../tools/plugin/rules/ForbiddenTextRule.js";
@@ -243,10 +242,8 @@ describe("ListingTextRule", () => {
 describe("BrandColorRule", () => {
   const rule = new BrandColorRule();
 
-  it("passes the shipped colours, which the icon tile also uses", async () => {
+  it("passes the shipped colours", async () => {
     assert.deepEqual(await messages(rule), []);
-    const hex = `#${ElephantMark.BRAND.map((channel) => channel.toString(16).padStart(2, "0")).join("").toUpperCase()}`;
-    assert.equal(Fixtures.manifest(view).interface.brandColor, hex);
   });
 
   it("rejects low contrast and malformed colours", async () => {

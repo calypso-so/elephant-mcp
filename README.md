@@ -1,3 +1,5 @@
+<img src="plugins/shared/assets/icon.png" alt="Elephant by Calypso" width="160">
+
 # Elephant by Calypso
 
 Elephant brings a team's Calypso knowledge into ChatGPT: cited answers from the files and websites the team keeps in Calypso. This repository holds everything Elephant-specific.
