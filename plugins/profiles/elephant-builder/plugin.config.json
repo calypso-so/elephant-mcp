@@ -1,0 +1,184 @@
+{
+  "extends": "../../shared/plugin.config.json",
+  "name": "elephant-builder",
+  "version": "1.0.0",
+  "description": "Teach Elephant from ChatGPT: add files, links and websites to your team's Calypso knowledge, and create buckets to hold them.",
+  "onboardingSkill": "elephant-builder-get-started",
+  "mcp": {
+    "serverName": "elephant-builder",
+    "url": "https://mcp.calypso.so/elephant/builder/mcp",
+    "scope": "elephant:write",
+    "tools": [
+      {
+        "name": "elephant-add-file",
+        "title": "Add a file",
+        "summary": "adds one file (a ChatGPT attachment or a public file link) to a bucket and queues it for indexing."
+      },
+      {
+        "name": "elephant-add-files",
+        "title": "Add files",
+        "summary": "adds 1 to 100 files to buckets in one request and reports how the batch went."
+      },
+      {
+        "name": "elephant-add-website",
+        "title": "Add a website",
+        "summary": "reads a web page, summarises and tags it, and adds it to a bucket."
+      },
+      {
+        "name": "elephant-create-bucket",
+        "title": "Create a bucket",
+        "summary": "creates an empty bucket (a folder of sources) to add files and websites to."
+      }
+    ]
+  },
+  "interface": {
+    "displayName": "Elephant Builder by Calypso",
+    "shortDescription": "Add files and websites to your team's Calypso knowledge",
+    "longDescription": "Elephant Builder by Calypso lets you teach Elephant without leaving ChatGPT. Add the files you attach in ChatGPT, public file links and websites to your team's Calypso knowledge, and create buckets to keep them organised. Every addition reports what was added, to which bucket, and whether it has finished indexing, so you can cite exactly what Elephant now knows. Elephant Builder only adds; it never deletes or edits your sources. To ask questions about your knowledge, use Elephant by Calypso.",
+    "capabilities": [
+      "Add ChatGPT attachments to a bucket",
+      "Add public file links",
+      "Add websites as knowledge",
+      "Create buckets",
+      "Batch uploads of up to 100 files"
+    ],
+    "defaultPrompts": [
+      "Add this PDF to our Policies bucket",
+      "Create a bucket called Sales playbooks",
+      "Add our Elephant page to the Website bucket"
+    ]
+  },
+  "listing": {
+    "releaseState": "after-elephant-approval",
+    "smokeTests": [
+      { "id": "add-attachment", "prompt": "Add the attached PDF to our Policies bucket.", "expect": "elephant-add-file; confirms file name, bucket and indexing status" },
+      { "id": "add-batch", "prompt": "Add these three attached files to the Onboarding bucket.", "expect": "elephant-add-files; reports each file's outcome" },
+      { "id": "add-website", "prompt": "Add https://www.calypso.so/elephant to the Website bucket.", "expect": "elephant-add-website; confirms the page and bucket" },
+      { "id": "create-bucket", "prompt": "Create a bucket called Sales playbooks.", "expect": "elephant-create-bucket; confirms name and slug" },
+      { "id": "add-to-new-bucket", "prompt": "Put the attached price list in a new bucket called Pricing.", "expect": "elephant-add-file with createMissingBuckets; confirms the new bucket" },
+      { "id": "ask-question", "prompt": "What does our refund policy say?", "expect": "no tool call; questions belong to Elephant by Calypso" },
+      { "id": "delete-source", "prompt": "Delete the old price list from my knowledge.", "expect": "no tool call; Elephant Builder only adds" },
+      { "id": "book-slot", "prompt": "Book me a meeting slot tomorrow at 3pm.", "expect": "no tool call; out of scope" }
+    ]
+  },
+  "review": {
+    "test_cases": [
+      {
+        "id": "add-attachment",
+        "kind": "positive",
+        "prompt": "Add the attached PDF to our Policies bucket.",
+        "expected_tool": "elephant-add-file",
+        "expected_behavior": "Calls elephant-add-file with the attachment and the Policies bucket, then confirms the file name, the bucket and the indexing status."
+      },
+      {
+        "id": "add-batch",
+        "kind": "positive",
+        "prompt": "Add these three attached files to the Onboarding bucket.",
+        "expected_tool": "elephant-add-files",
+        "expected_behavior": "Calls elephant-add-files once with all three files and the Onboarding bucket, then reports each file's outcome."
+      },
+      {
+        "id": "add-website",
+        "kind": "positive",
+        "prompt": "Add https://www.calypso.so/elephant to the Website bucket.",
+        "expected_tool": "elephant-add-website",
+        "expected_behavior": "Calls elephant-add-website with the URL and the Website bucket, then confirms the page title and bucket."
+      },
+      {
+        "id": "create-bucket",
+        "kind": "positive",
+        "prompt": "Create a bucket called Sales playbooks.",
+        "expected_tool": "elephant-create-bucket",
+        "expected_behavior": "Calls elephant-create-bucket with the name and confirms the new bucket's name and slug."
+      },
+      {
+        "id": "add-to-new-bucket",
+        "kind": "positive",
+        "prompt": "Put the attached price list in a new bucket called Pricing.",
+        "expected_tool": "elephant-add-file",
+        "expected_behavior": "Calls elephant-add-file with bucket slug pricing and createMissingBuckets, then confirms the file and the new bucket."
+      },
+      {
+        "id": "ask-question",
+        "kind": "negative",
+        "prompt": "What does our refund policy say?",
+        "routes_to": "Elephant by Calypso",
+        "expected_behavior": "Does not call a tool. Explains that Elephant Builder adds knowledge and that Elephant by Calypso answers questions from it."
+      },
+      {
+        "id": "delete-source",
+        "kind": "negative",
+        "prompt": "Delete the old price list from my knowledge.",
+        "routes_to": "Calypso console",
+        "expected_behavior": "Does not call a tool. Explains that Elephant Builder only adds knowledge and that sources are removed in the Calypso console."
+      },
+      {
+        "id": "book-slot",
+        "kind": "negative",
+        "prompt": "Book me a meeting slot tomorrow at 3pm.",
+        "routes_to": "Out of scope (scheduling)",
+        "expected_behavior": "Does not call a tool. Explains that Elephant Builder adds knowledge and cannot book meetings."
+      }
+    ]
+  },
+  "publication": {
+    "releaseNotes": "First release: add ChatGPT attachments, file links and websites to your team's Calypso knowledge, and create buckets."
+  },
+  "skillTemplates": [
+    {
+      "template": "get-started",
+      "as": "elephant-builder-get-started",
+      "vars": {
+        "description": "Start here when the user first connects Elephant Builder by Calypso or asks how to teach Elephant. Explains how to add files, links and websites to buckets, and how additions are reported.",
+        "whatItIs": "Elephant Builder adds knowledge to your team's Calypso workspace from ChatGPT. Whatever it adds becomes a source that Elephant by Calypso can answer from. Sources live in buckets (a bucket is a folder of sources Elephant remembers). Elephant Builder only adds: it never edits or deletes a source.",
+        "firstSteps": [
+          "Attach a file in ChatGPT and say which bucket it belongs in. Elephant Builder adds it with `elephant-add-file`.",
+          "For several files at once, use `elephant-add-files`.",
+          "To add a web page, give its URL; `elephant-add-website` reads, summarises and tags it.",
+          "To start a new collection, create a bucket with `elephant-create-bucket`, or let an addition create it."
+        ],
+        "examplePrompts": [
+          "Add the attached PDF to our Policies bucket.",
+          "Add these three files to the Onboarding bucket.",
+          "Add our Elephant page to the Website bucket.",
+          "Create a bucket called Sales playbooks."
+        ],
+        "citationRule": "Report every addition by citing exactly what the tool returned: the file name or URL, the bucket it went into, and its indexing status. A source is only answerable once indexing finishes; say so when it is still indexing.",
+        "notThisPlugin": [
+          "Answering questions from the knowledge. That is Elephant by Calypso.",
+          "Deleting, editing or moving sources. Do that in the Calypso console.",
+          "Adding private pages that need a login. Only public web pages and links can be fetched."
+        ]
+      }
+    },
+    {
+      "template": "status",
+      "as": "elephant-builder-status",
+      "vars": {
+        "description": "Use when the user asks whether Elephant Builder by Calypso is connected or why an addition failed. Explains how to confirm the connection and read the typed errors the tools return.",
+        "statusSteps": [
+          "The connection works when the Elephant Builder tools are available in this chat and a call returns a result instead of an authorization error.",
+          "This plugin has no read-only check. Never add a source or create a bucket just to test the connection; the first real addition confirms it.",
+          "To see which buckets exist, the user can ask Elephant by Calypso, which lists them."
+        ],
+        "reportFormat": "Say whether the last call succeeded. Cite the tool's own result: the file name or URL, the bucket, and the status it reported. Quote error codes exactly (for example `bucket_slug_exists`) and explain them in plain words.",
+        "troubleshooting": [
+          "An authorization error means the ChatGPT connection to Calypso expired or was removed. Ask the user to reconnect Elephant Builder and sign in to Calypso again.",
+          "A permission error means the connected team's Calypso plan or the user's role does not allow adding knowledge. Point the user to their Calypso workspace admin.",
+          "`url_fetch_blocked` means the link is not public; `url_fetch_failed` is temporary and can be retried; `file_too_large` means the file is over 25 MB."
+        ],
+        "notThisPlugin": [
+          "Answering questions or listing buckets. That is Elephant by Calypso.",
+          "Changing the connected team. Reconnect to switch teams."
+        ]
+      }
+    }
+  ],
+  "skills": [
+    "add-a-file",
+    "add-a-website",
+    "create-a-bucket",
+    "elephant-builder-get-started",
+    "elephant-builder-status"
+  ]
+}

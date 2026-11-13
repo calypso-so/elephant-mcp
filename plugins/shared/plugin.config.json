@@ -1,0 +1,87 @@
+{
+  "$comment": "Parent configuration for every Elephant profile. Profiles extend it; objects merge, scalars and arrays are replaced, forbiddenPatterns accumulate.",
+  "author": {
+    "name": "Calypso",
+    "url": "https://www.calypso.so"
+  },
+  "homepage": "https://www.calypso.so/elephant",
+  "interface": {
+    "developerName": "Calypso",
+    "category": "Productivity",
+    "brandColor": "#24414E",
+    "brandColorDark": "#9CC3CF",
+    "icon": "./assets/icon.png",
+    "logo": "./assets/logo.png",
+    "websiteURL": "https://www.calypso.so/elephant",
+    "privacyPolicyURL": "https://www.calypso.so/privacy",
+    "termsOfServiceURL": "https://www.calypso.so/terms"
+  },
+  "publication": {
+    "countries": [
+      "ALL"
+    ]
+  },
+  "catalog": {
+    "tools": [
+      "elephant-ask",
+      "elephant-search",
+      "elephant-list-buckets",
+      "elephant-open-source",
+      "elephant-add-file",
+      "elephant-add-files",
+      "elephant-add-website",
+      "elephant-create-bucket"
+    ],
+    "canonicalTools": [
+      "calypso-agent",
+      "calypso-search",
+      "calypso-list-buckets",
+      "calypso-get-file",
+      "calypso-upload-file",
+      "calypso-upload-files-batch",
+      "calypso-add-website",
+      "calypso-create-bucket",
+      "calypso-create-agent"
+    ],
+    "ownedHosts": [
+      "calypso.so",
+      "www.calypso.so",
+      "mcp.calypso.so",
+      "login.calypso.so",
+      "docs.calypso.so"
+    ]
+  },
+  "forbiddenPatterns": [
+    {
+      "pattern": "\\bnpx\\b",
+      "reason": "local-install leftover; ChatGPT connects over OAuth, nothing is installed"
+    },
+    {
+      "pattern": "\\bclaude[ -]?(code|desktop)\\b",
+      "flags": "i",
+      "reason": "setup text for another client"
+    },
+    {
+      "pattern": "CALYPSO_API_KEY|--api-key",
+      "reason": "API keys are never handled in ChatGPT; auth is OAuth"
+    },
+    {
+      "pattern": "\\bfilePath\\b",
+      "reason": "the hosted server has no file-path input"
+    },
+    {
+      "pattern": "\\b(AIcore|Firestore|Gemini)\\b",
+      "reason": "internal implementation detail"
+    },
+    {
+      "pattern": "\\b(feel free to|it is fine to|it's fine to|you may|you can)\\s+(guess|make (it|something) up|answer without (a )?(source|citation)s?)\\b",
+      "flags": "i",
+      "reason": "every answer cites a source; Elephant never guesses"
+    },
+    {
+      "pattern": "\\bbest guess\\b",
+      "flags": "i",
+      "reason": "every answer cites a source; Elephant never guesses"
+    }
+  ]
+}

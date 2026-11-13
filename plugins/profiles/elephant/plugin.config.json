@@ -1,0 +1,194 @@
+{
+  "extends": "../../shared/plugin.config.json",
+  "name": "elephant",
+  "version": "1.0.0",
+  "description": "Cited answers from your team's Calypso knowledge. Ask questions, search passages, list buckets and look up sources. Read-only.",
+  "onboardingSkill": "elephant-get-started",
+  "mcp": {
+    "serverName": "elephant",
+    "url": "https://mcp.calypso.so/elephant/mcp",
+    "scope": "elephant:read",
+    "tools": [
+      {
+        "name": "elephant-ask",
+        "title": "Ask Elephant",
+        "summary": "answers a question from your team's Calypso knowledge, citing its sources."
+      },
+      {
+        "name": "elephant-search",
+        "title": "Search Elephant",
+        "summary": "returns the passages and sources that match a query, without writing an answer."
+      },
+      {
+        "name": "elephant-list-buckets",
+        "title": "List buckets",
+        "summary": "lists the team's buckets (folders of sources) with ids, names, slugs and the sources in each."
+      },
+      {
+        "name": "elephant-open-source",
+        "title": "Open a source",
+        "summary": "shows one source's details: file name, type, size and whether it is indexed."
+      }
+    ]
+  },
+  "interface": {
+    "displayName": "Elephant by Calypso",
+    "shortDescription": "Cited answers from your team's Calypso knowledge",
+    "longDescription": "Elephant by Calypso brings your team's Calypso knowledge into ChatGPT. Ask a question and Elephant answers from the files and websites your team added to Calypso, citing the source behind every claim. Search for exact passages, see which buckets of knowledge your team keeps, and check a source's details and indexing status. Elephant is read-only and never changes your knowledge. When your sources do not answer a question, Elephant says so instead of guessing. To add files or websites, use Elephant Builder by Calypso.",
+    "capabilities": [
+      "Cited answers from your team's knowledge",
+      "Passage search across buckets",
+      "Bucket overview",
+      "Source details and indexing status",
+      "Read-only access"
+    ],
+    "defaultPrompts": [
+      "What does our knowledge say about our refund policy?",
+      "Search our sources for the onboarding checklist",
+      "Which knowledge buckets does my team have?"
+    ]
+  },
+  "listing": {
+    "releaseState": "ready-for-review",
+    "smokeTests": [
+      { "id": "ask-policy", "prompt": "Using Elephant, what does our knowledge say about the refund policy?", "expect": "elephant-ask; answer cites each claim by file name or URL" },
+      { "id": "search-passages", "prompt": "Search Elephant for passages that mention shipping times.", "expect": "elephant-search; passages listed with their sources" },
+      { "id": "list-buckets", "prompt": "Which Elephant buckets does my team have?", "expect": "elephant-list-buckets; buckets listed by name with source counts" },
+      { "id": "open-source", "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.", "expect": "elephant-open-source; file details and indexing status" },
+      { "id": "ask-follow-up", "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.", "expect": "elephant-ask twice in one thread; both answers cited" },
+      { "id": "add-file", "prompt": "Add this PDF to my Elephant knowledge.", "expect": "no tool call; explains Elephant is read-only and points to Elephant Builder by Calypso" },
+      { "id": "book-slot", "prompt": "Book me a meeting slot tomorrow at 3pm.", "expect": "no tool call; out of scope for Elephant" },
+      { "id": "general-question", "prompt": "What is the capital of Australia?", "expect": "no tool call; a general question, not team knowledge" }
+    ]
+  },
+  "review": {
+    "test_cases": [
+      {
+        "id": "ask-policy",
+        "kind": "positive",
+        "prompt": "Using Elephant, what does our knowledge say about the refund policy?",
+        "expected_tool": "elephant-ask",
+        "expected_behavior": "Calls elephant-ask and answers from the review team's sources, citing the file name or URL behind each claim."
+      },
+      {
+        "id": "search-passages",
+        "kind": "positive",
+        "prompt": "Search Elephant for passages that mention shipping times.",
+        "expected_tool": "elephant-search",
+        "expected_behavior": "Calls elephant-search and lists the matching passages, each with the file name or URL it came from, without inventing an answer."
+      },
+      {
+        "id": "list-buckets",
+        "kind": "positive",
+        "prompt": "Which Elephant buckets does my team have?",
+        "expected_tool": "elephant-list-buckets",
+        "expected_behavior": "Calls elephant-list-buckets and lists the team's buckets by name with how many sources each holds."
+      },
+      {
+        "id": "open-source",
+        "kind": "positive",
+        "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.",
+        "expected_tool": "elephant-open-source",
+        "expected_behavior": "Finds a source id with elephant-list-buckets, then calls elephant-open-source and reports the file name, type and indexing status."
+      },
+      {
+        "id": "ask-follow-up",
+        "kind": "positive",
+        "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.",
+        "expected_tool": "elephant-ask",
+        "expected_behavior": "Calls elephant-ask for the first question and again for the follow-up, restating the subject (the warranty) in the second prompt; both answers cite their sources."
+      },
+      {
+        "id": "add-file",
+        "kind": "negative",
+        "prompt": "Add this PDF to my Elephant knowledge.",
+        "routes_to": "Elephant Builder by Calypso",
+        "expected_behavior": "Does not call a tool. Explains that Elephant is read-only and that Elephant Builder by Calypso adds files and websites."
+      },
+      {
+        "id": "book-slot",
+        "kind": "negative",
+        "prompt": "Book me a meeting slot tomorrow at 3pm.",
+        "routes_to": "Out of scope (scheduling)",
+        "expected_behavior": "Does not call a tool. Explains that Elephant answers from the team's knowledge and cannot book meetings."
+      },
+      {
+        "id": "general-question",
+        "kind": "negative",
+        "prompt": "What is the capital of Australia?",
+        "routes_to": "ChatGPT without Elephant (general knowledge)",
+        "expected_behavior": "Does not call Elephant. The question is about the world, not the team's own knowledge."
+      }
+    ]
+  },
+  "publication": {
+    "releaseNotes": "First release: cited answers, passage search, bucket overview and source details over your team's Calypso knowledge. Read-only."
+  },
+  "forbiddenPatterns": [
+    {
+      "pattern": "\\b(I|Elephant) (added|uploaded|saved|stored|deleted) (it|this|the file|your file|the website)\\b",
+      "flags": "i",
+      "reason": "Elephant is read-only"
+    }
+  ],
+  "skillTemplates": [
+    {
+      "template": "get-started",
+      "as": "elephant-get-started",
+      "vars": {
+        "description": "Start here when the user first connects Elephant by Calypso or asks what Elephant can do. Explains the read-only tools, how answers are cited, and what to ask first.",
+        "whatItIs": "Elephant is your team's Calypso knowledge inside ChatGPT. Your team adds files and websites to Calypso and groups them into buckets (a bucket is a folder of sources Elephant remembers). Elephant answers from those sources only, and every answer says which source each claim came from. Elephant is read-only: it reads your team's knowledge and never changes it.",
+        "firstSteps": [
+          "Ask a question about your team's own material, for example a policy, a product detail or a process. Elephant answers with `elephant-ask` and cites its sources.",
+          "To see the evidence instead of an answer, search with `elephant-search`.",
+          "To see what Elephant knows, list the buckets with `elephant-list-buckets`.",
+          "To check one source's details or whether it finished indexing, use `elephant-open-source`."
+        ],
+        "examplePrompts": [
+          "What does our knowledge say about the refund policy?",
+          "Search our sources for the onboarding checklist.",
+          "Which buckets does my team have, and how many sources are in each?",
+          "Is the latest price list fully indexed?"
+        ],
+        "citationRule": "Cite every claim. After each fact, name the source it came from: the file name, or the URL for a website. If the sources do not cover the question, say so plainly and do not fill the gap from general knowledge. See the `elephant-doesnt-know` skill for how to word that.",
+        "notThisPlugin": [
+          "Adding files, websites or buckets. Elephant is read-only; that is Elephant Builder by Calypso.",
+          "Deleting or editing sources. Manage sources in the Calypso console.",
+          "Answering general questions about the world. Elephant answers only from your team's sources.",
+          "Booking, messaging customers or other Calypso products. Elephant covers knowledge only."
+        ]
+      }
+    },
+    {
+      "template": "status",
+      "as": "elephant-status",
+      "vars": {
+        "description": "Use when the user asks whether Elephant by Calypso is connected, which team it reads from, or which buckets it can reach. Checks the connection by listing the team's buckets.",
+        "statusSteps": [
+          "Call `elephant-list-buckets` with no arguments. A successful reply means the connection works; it names the team and its buckets.",
+          "Pass `includeArchived: true` only when the user asks about archived buckets.",
+          "Count the sources in each bucket from its list of source ids."
+        ],
+        "reportFormat": "Say that Elephant is connected, then list the buckets by name with the number of sources in each. Cite the tool result as the source of the status (\"according to Elephant's bucket list\"). Do not show raw ids unless the user asks for them.",
+        "troubleshooting": [
+          "An authorization error means the ChatGPT connection to Calypso expired or was removed. Ask the user to reconnect Elephant from ChatGPT's settings and sign in to Calypso again.",
+          "An empty bucket list means the team has not added knowledge yet. Explain that sources are added in Calypso or with Elephant Builder by Calypso.",
+          "A permission or plan error means the team's Calypso plan does not include Elephant. Say so and point the user to their Calypso workspace admin."
+        ],
+        "notThisPlugin": [
+          "Changing the connected team. The user picks the team when connecting; reconnect to switch.",
+          "Adding or removing buckets or sources. That is Elephant Builder by Calypso or the Calypso console."
+        ]
+      }
+    }
+  ],
+  "skills": [
+    "ask-elephant",
+    "elephant-doesnt-know",
+    "elephant-get-started",
+    "elephant-status",
+    "find-a-bucket",
+    "open-a-source",
+    "search-elephant"
+  ]
+}
