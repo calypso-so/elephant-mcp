@@ -5,12 +5,14 @@ import type { AuthStrategy } from "../auth/AuthStrategy.js";
 import { BearerAuthenticator } from "../auth/BearerAuthenticator.js";
 import { JwtGrantStrategy } from "../auth/JwtGrantStrategy.js";
 import { TokenCipher } from "../auth/TokenCipher.js";
+import type { PackageInfo } from "../ElephantMcpServer.js";
 import { ToolPresetRegistry } from "../presets/ToolPresetRegistry.js";
 import type { HttpConfig } from "./HttpConfig.js";
 import { HttpServer } from "./HttpServer.js";
-import { McpEndpoint, type PackageInfo } from "./McpEndpoint.js";
+import { McpEndpoint } from "./McpEndpoint.js";
 import { ModelCatalogCache } from "./ModelCatalogCache.js";
 import { ProtectedResourceMetadata } from "./ProtectedResourceMetadata.js";
+import { RateLimiter } from "./RateLimiter.js";
 
 /**
  * Composition root for the hosted server: wires config into strategies,
@@ -42,15 +44,17 @@ export function composeHostedServer(
 
   const authenticator = new BearerAuthenticator(strategies, metadataUrl);
   const catalogs = new ModelCatalogCache();
+  const limiter = new RateLimiter(config.requestsPerMinute);
   const endpoints = ToolPresetRegistry.all().map(
     (preset) =>
-      new McpEndpoint(
+      new McpEndpoint({
         preset,
         authenticator,
         catalogs,
-        config.apiBaseUrl,
+        limiter,
+        apiBaseUrl: config.apiBaseUrl,
         packageInfo,
-      ),
+      }),
   );
 
   return new HttpServer({

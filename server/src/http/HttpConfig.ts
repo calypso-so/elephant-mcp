@@ -1,9 +1,10 @@
-import { DEFAULT_CALYPSO_API_BASE_URL } from "../config.js";
+import { DEFAULT_CALYPSO_API_BASE_URL } from "../calypso/CalypsoApiConfig.js";
 
 export const DEFAULT_PUBLIC_BASE_URL = "https://mcp.calypso.so";
 export const DEFAULT_OAUTH_ISSUER = "https://login.calypso.so";
 const DEFAULT_PORT = 8080;
 const DEFAULT_MAX_BODY_BYTES = 32 * 1024 * 1024;
+const DEFAULT_REQUESTS_PER_MINUTE = 120;
 
 /**
  * Settings for the Elephant server, read once at startup.
@@ -15,7 +16,8 @@ const DEFAULT_MAX_BODY_BYTES = 32 * 1024 * 1024;
  * | CALYPSO_OAUTH_ISSUER       | authorization server issuer                          |
  * | ELEPHANT_JWKS_URL          | override for the issuer's JWKS URL                   |
  * | ELEPHANT_TOKEN_ENC_KEY     | 32-byte base64 key for the `ek` claim; unset = OAuth off, API keys only |
- * | CALYPSO_API_BASE_URL       | AIcore base URL (…/v1)                               |
+ * | CALYPSO_API_BASE_URL       | Calypso API base URL (…/v1)                          |
+ * | ELEPHANT_REQUESTS_PER_MINUTE | per-caller request budget (default 120)            |
  */
 export class HttpConfig {
   private constructor(
@@ -26,6 +28,7 @@ export class HttpConfig {
     readonly tokenEncKey: string | undefined,
     readonly apiBaseUrl: string,
     readonly maxBodyBytes: number,
+    readonly requestsPerMinute: number,
   ) {}
 
   static fromEnv(env: NodeJS.ProcessEnv): HttpConfig {
@@ -43,6 +46,11 @@ export class HttpConfig {
       env.ELEPHANT_TOKEN_ENC_KEY?.trim() || undefined,
       apiBaseUrl,
       DEFAULT_MAX_BODY_BYTES,
+      parsePositive(
+        env.ELEPHANT_REQUESTS_PER_MINUTE,
+        DEFAULT_REQUESTS_PER_MINUTE,
+        "ELEPHANT_REQUESTS_PER_MINUTE",
+      ),
     );
   }
 
@@ -63,4 +71,17 @@ function parsePort(value: string | undefined): number {
     throw new Error(`Invalid PORT: ${value}`);
   }
   return port;
+}
+
+function parsePositive(
+  value: string | undefined,
+  fallback: number,
+  name: string,
+): number {
+  if (!value?.trim()) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`Invalid ${name}: ${value}`);
+  }
+  return parsed;
 }

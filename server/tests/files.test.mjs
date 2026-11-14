@@ -1,18 +1,17 @@
 import assert from "node:assert/strict";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
 import { test } from "node:test";
 
+import { buildKnowledgeBatchManifest } from "../dist/calypso/BatchManifest.js";
 import {
-  buildKnowledgeBatchManifest,
-  resolveUploadContent,
+  decodeUploadContent,
   stripDataUriPrefix,
+} from "../dist/calypso/UploadContent.js";
+import {
   uploadKnowledgeFile,
   uploadKnowledgeFilesBatch,
   waitForKnowledgeBatchReady,
   waitForKnowledgeFileIndexed,
-} from "../dist/files.js";
+} from "./support/calypso.mjs";
 
 function getRequestHeader(headers, name) {
   if (!headers) {
@@ -49,8 +48,8 @@ test("stripDataUriPrefix removes data URI metadata", () => {
   assert.equal(stripDataUriPrefix("aGVsbG8="), "aGVsbG8=");
 });
 
-test("resolveUploadContent decodes base64 content", async () => {
-  const content = await resolveUploadContent({
+test("decodeUploadContent decodes base64 content", () => {
+  const content = decodeUploadContent({
     filename: "hello.txt",
     mimeType: "text/plain",
     contentBase64: "data:text/plain;base64,aGVsbG8=",
@@ -61,56 +60,32 @@ test("resolveUploadContent decodes base64 content", async () => {
   assert.equal(Buffer.from(content.bytes).toString("utf8"), "hello");
 });
 
-test("resolveUploadContent reads local file paths", async () => {
-  const tempDir = await mkdtemp(path.join(tmpdir(), "calypso-mcp-"));
-  const filePath = path.join(tempDir, "local.txt");
-
-  try {
-    await writeFile(filePath, "local file");
-    const content = await resolveUploadContent({
-      mimeType: "text/plain",
-      filePath,
-    });
-
-    assert.equal(content.filename, "local.txt");
-    assert.equal(content.mimeType, "text/plain");
-    assert.equal(Buffer.from(content.bytes).toString("utf8"), "local file");
-  } finally {
-    await rm(tempDir, { recursive: true, force: true });
-  }
-});
-
-test("resolveUploadContent explains hosted attachment filePath failures", async () => {
-  await assert.rejects(
+test("decodeUploadContent never reads a path from disk", () => {
+  // A hosted server must not read its own files on a caller's behalf, so a
+  // path is not a source at all: without bytes the call fails.
+  assert.throws(
     () =>
-      resolveUploadContent({
-        filename: "The-History-of-AI_Avicena.pdf",
-        mimeType: "application/pdf",
-        filePath: "/mnt/user-data/uploads/The-History-of-AI_Avicena.pdf",
-      }),
-    /hosted-agent attachment path.*contentBase64/s,
-  );
-});
-
-test("resolveUploadContent requires exactly one content source", async () => {
-  await assert.rejects(
-    () =>
-      resolveUploadContent({
-        filename: "invalid.txt",
+      decodeUploadContent({
+        filename: "passwd",
         mimeType: "text/plain",
+        filePath: "/etc/passwd",
       }),
-    /Provide exactly one/,
+    /contentBase64/,
   );
+});
 
-  await assert.rejects(
+test("decodeUploadContent requires a filename and decodable bytes", () => {
+  assert.throws(
     () =>
-      resolveUploadContent({
-        filename: "invalid.txt",
+      decodeUploadContent({
         mimeType: "text/plain",
         contentBase64: "aGVsbG8=",
-        filePath: "/tmp/invalid.txt",
       }),
-    /Provide exactly one/,
+    /filename is required/,
+  );
+  assert.throws(
+    () => decodeUploadContent({ filename: "x.txt", contentBase64: "!!!" }),
+    /could not be decoded/,
   );
 });
 
@@ -581,7 +556,7 @@ test("waitForKnowledgeFileIndexed explains queued public upload timeout", async 
           "file-queued",
           "task-queued",
         ),
-      /AIcore knowledge index worker is running.*file_id=file-queued.*task_id=task-queued/,
+      /did not start or finish before timeout.*may still finish.*file_id=file-queued.*task_id=task-queued/,
     );
   } finally {
     globalThis.fetch = originalFetch;
@@ -624,7 +599,7 @@ test("waitForKnowledgeBatchReady returns actionable timeout message", async () =
     assert.equal(result.status, "accepted");
     assert.match(result.message, /Batch batch-queued was accepted/);
     assert.match(result.message, /queued=2 indexing=1 active=0 failed=0/);
-    assert.match(result.message, /AIcore knowledge index worker is running/);
+    assert.match(result.message, /may still finish/);
   } finally {
     globalThis.fetch = originalFetch;
     globalThis.setTimeout = originalSetTimeout;

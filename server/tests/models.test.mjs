@@ -2,21 +2,23 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import {
-  fallbackRagModelCatalog,
-  loadRagModelCatalog,
-  modelIdsFromCatalog,
-} from "../dist/models.js";
+  fallbackAgentCatalog,
+  loadAgentCatalog,
+} from "../dist/calypso/AgentCatalogLoader.js";
 
-test("fallbackRagModelCatalog returns the base RAG model", () => {
-  const catalog = fallbackRagModelCatalog();
+const modelIdsFromCatalog = (catalog) =>
+  catalog.models.map((model) => model.id);
+
+test("fallbackAgentCatalog returns the base agent", () => {
+  const catalog = fallbackAgentCatalog();
 
   assert.equal(catalog.source, "fallback");
   assert.deepEqual(modelIdsFromCatalog(catalog), ["calypso-agent"]);
   assert.equal(catalog.defaultModel, "calypso-agent");
 });
 
-test("loadRagModelCatalog falls back without an API key", async () => {
-  const catalog = await loadRagModelCatalog({
+test("loadAgentCatalog falls back without an API key", async () => {
+  const catalog = await loadAgentCatalog({
     apiBaseUrl: "https://api.example.test/v1",
   });
 
@@ -24,7 +26,7 @@ test("loadRagModelCatalog falls back without an API key", async () => {
   assert.deepEqual(modelIdsFromCatalog(catalog), ["calypso-agent"]);
 });
 
-test("loadRagModelCatalog parses REST model discovery response", async () => {
+test("loadAgentCatalog parses REST model discovery response", async () => {
   const originalFetch = globalThis.fetch;
   const calls = [];
   globalThis.fetch = async (url, init) => {
@@ -79,7 +81,7 @@ test("loadRagModelCatalog parses REST model discovery response", async () => {
   };
 
   try {
-    const catalog = await loadRagModelCatalog({
+    const catalog = await loadAgentCatalog({
       apiBaseUrl: "https://api.example.test/v1",
       apiKey: "sk-test",
     });
@@ -129,7 +131,7 @@ test("api catalog takes its default from the discovery response", async () => {
       { status: 200, headers: { "content-type": "application/json" } },
     );
   try {
-    const catalog = await loadRagModelCatalog({
+    const catalog = await loadAgentCatalog({
       apiKey: "sk-test",
       apiBaseUrl: "https://api.example.com/v1",
     });

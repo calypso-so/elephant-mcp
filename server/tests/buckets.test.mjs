@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  listKnowledgeBuckets,
-  normalizeKnowledgeBucketList,
-} from "../dist/buckets.js";
+import { normalizeKnowledgeBucketList } from "../dist/calypso/bucketList.js";
+import { listKnowledgeBuckets } from "./support/calypso.mjs";
 
 test("normalizeKnowledgeBucketList normalizes and deduplicates buckets", () => {
   const result = normalizeKnowledgeBucketList({

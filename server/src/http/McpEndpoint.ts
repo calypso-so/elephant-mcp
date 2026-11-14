@@ -5,27 +5,37 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { AuthChallenge } from "../auth/AuthChallenge.js";
 import type { BearerAuthenticator } from "../auth/BearerAuthenticator.js";
 import type { Credential } from "../auth/Credential.js";
+import {
+  createElephantMcpServer,
+  type PackageInfo,
+} from "../ElephantMcpServer.js";
 import type { ToolPreset } from "../presets/ToolPreset.js";
-import { createElephantMcpServer } from "../server.js";
 import type { ModelCatalogCache } from "./ModelCatalogCache.js";
+import type { RateLimiter } from "./RateLimiter.js";
 
-export type PackageInfo = { name: string; version: string };
+export type McpEndpointOptions = {
+  readonly preset: ToolPreset;
+  readonly authenticator: BearerAuthenticator;
+  readonly catalogs: ModelCatalogCache;
+  /** Shared by every endpoint, so a caller's budget spans both plugins. */
+  readonly limiter: RateLimiter;
+  readonly apiBaseUrl: string;
+  readonly packageInfo: PackageInfo;
+};
 
 /**
  * One preset served over stateless Streamable HTTP.
  *
- * Every POST is authenticated, then handled by a fresh McpServer bound to the
- * caller's API key and the preset. Nothing survives the request, so any
- * instance can serve any call and the service scales horizontally.
+ * Every POST is authenticated, checked against the caller's request budget,
+ * then handled by a fresh MCP server bound to the caller's API key. Nothing
+ * survives the request, so any instance can serve any call.
  */
 export class McpEndpoint {
-  constructor(
-    readonly preset: ToolPreset,
-    private readonly authenticator: BearerAuthenticator,
-    private readonly catalogs: ModelCatalogCache,
-    private readonly apiBaseUrl: string,
-    private readonly packageInfo: PackageInfo,
-  ) {}
+  readonly preset: ToolPreset;
+
+  constructor(private readonly options: McpEndpointOptions) {
+    this.preset = options.preset;
+  }
 
   /** Returns the principal handled, or undefined when refused. */
   async handle(
@@ -33,13 +43,18 @@ export class McpEndpoint {
     res: ServerResponse,
     body: unknown,
   ): Promise<string | undefined> {
-    const result = await this.authenticator.authenticate(
+    const result = await this.options.authenticator.authenticate(
       req.headers.authorization,
       this.preset,
     );
     if (result instanceof AuthChallenge) {
       McpEndpoint.refuse(res, result);
       return undefined;
+    }
+    const decision = this.options.limiter.take(result.principal);
+    if (!decision.allowed) {
+      McpEndpoint.throttle(res, decision.retryAfterSeconds);
+      return result.principal;
     }
     await this.serve(req, res, body, result);
     return result.principal;
@@ -51,16 +66,16 @@ export class McpEndpoint {
     body: unknown,
     credential: Credential,
   ): Promise<void> {
-    const config = {
+    const api = {
       apiKey: credential.apiKey,
-      apiBaseUrl: this.apiBaseUrl,
-      localFileAccess: false,
+      apiBaseUrl: this.options.apiBaseUrl,
     };
     const server = createElephantMcpServer({
-      config,
-      modelCatalog: await this.catalogs.get(config),
-      packageInfo: this.packageInfo,
       preset: this.preset,
+      api,
+      agents: await this.options.catalogs.get(api),
+      packageInfo: this.options.packageInfo,
+      principal: credential.principal,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -79,5 +94,22 @@ export class McpEndpoint {
       "WWW-Authenticate": challenge.header(),
     });
     res.end(JSON.stringify(challenge.body()));
+  }
+
+  private static throttle(res: ServerResponse, retryAfterSeconds: number) {
+    res.writeHead(429, {
+      "Content-Type": "application/json",
+      "Retry-After": String(retryAfterSeconds),
+    });
+    res.end(
+      JSON.stringify({
+        jsonrpc: "2.0",
+        error: {
+          code: -32000,
+          message: `Too many requests. Try again in ${retryAfterSeconds} s.`,
+        },
+        id: null,
+      }),
+    );
   }
 }

@@ -33,7 +33,7 @@ export type JwtGrantStrategyOptions = {
  * Verifies signature, issuer, audience (exactly this preset's URL — a token
  * for /elephant/mcp is useless on /elephant/builder/mcp), expiry and scope,
  * then unseals the grant's API key from `ek`. The server keeps no grant state:
- * revoking a grant revokes its key, which AIcore then rejects.
+ * revoking a grant revokes its key, which the Calypso API then rejects.
  */
 export class JwtGrantStrategy implements AuthStrategy {
   constructor(private readonly options: JwtGrantStrategyOptions) {}

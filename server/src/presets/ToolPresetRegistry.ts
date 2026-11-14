@@ -1,46 +1,30 @@
-import {
-  CALYPSO_ADD_WEBSITE,
-  CALYPSO_AGENT,
-  CALYPSO_CREATE_BUCKET,
-  CALYPSO_GET_FILE,
-  CALYPSO_LIST_BUCKETS,
-  CALYPSO_SEARCH,
-  CALYPSO_UPLOAD_FILE,
-  CALYPSO_UPLOAD_FILES_BATCH,
-} from "../config.js";
-import {
-  ELEPHANT_ADD_FILE,
-  ELEPHANT_ADD_FILES,
-  ELEPHANT_ADD_WEBSITE,
-  ELEPHANT_ASK,
-  ELEPHANT_BUILDER_INSTRUCTIONS,
-  ELEPHANT_CREATE_BUCKET,
-  ELEPHANT_INSTRUCTIONS,
-  ELEPHANT_LIST_BUCKETS,
-  ELEPHANT_OPEN_SOURCE,
-  ELEPHANT_SEARCH,
-} from "./elephantCopy.js";
+import { AddFilesTool } from "../tools/AddFilesTool.js";
+import { AddFileTool } from "../tools/AddFileTool.js";
+import { AddWebsiteTool } from "../tools/AddWebsiteTool.js";
+import { AskTool } from "../tools/AskTool.js";
+import { CreateBucketTool } from "../tools/CreateBucketTool.js";
+import { ListBucketsTool } from "../tools/ListBucketsTool.js";
+import { OpenSourceTool } from "../tools/OpenSourceTool.js";
+import { SearchTool } from "../tools/SearchTool.js";
 import { ToolPreset } from "./ToolPreset.js";
 
-/**
- * Every published surface, declared explicitly.
- *
- * No preset is derived from "all tools": adding a tool to the server must not
- * leak it onto a branded plugin until someone adds it here on purpose.
- */
 /** Elephant by Calypso — read-only, cited answers. */
 const elephant = new ToolPreset({
   id: "elephant",
   path: "/elephant/mcp",
   serverName: "elephant",
   displayName: "Elephant by Calypso",
-  instructions: ELEPHANT_INSTRUCTIONS,
   scope: "elephant:read",
+  instructions: [
+    "Elephant by Calypso answers from this team's Calypso knowledge — the documents, websites and images the team has added — and cites every source.",
+    "It is read-only: it cannot add, change or delete knowledge. To add files or websites, use Elephant Builder by Calypso.",
+    "When the knowledge does not cover a question, say so instead of answering from general knowledge.",
+  ].join(" "),
   tools: [
-    [CALYPSO_AGENT, ELEPHANT_ASK],
-    [CALYPSO_SEARCH, ELEPHANT_SEARCH],
-    [CALYPSO_LIST_BUCKETS, ELEPHANT_LIST_BUCKETS],
-    [CALYPSO_GET_FILE, ELEPHANT_OPEN_SOURCE],
+    new AskTool(),
+    new SearchTool(),
+    new ListBucketsTool(),
+    new OpenSourceTool(),
   ],
 });
 
@@ -50,24 +34,23 @@ const elephantBuilder = new ToolPreset({
   path: "/elephant/builder/mcp",
   serverName: "elephant-builder",
   displayName: "Elephant Builder by Calypso",
-  instructions: ELEPHANT_BUILDER_INSTRUCTIONS,
   scope: "elephant:write",
+  instructions: [
+    "Elephant Builder by Calypso adds files and websites to this team's Calypso knowledge buckets and creates new buckets.",
+    "It does not answer questions; use Elephant by Calypso to ask about the knowledge once it is added.",
+    "Confirm the destination bucket with the user before adding content.",
+  ].join(" "),
   tools: [
-    [CALYPSO_UPLOAD_FILE, ELEPHANT_ADD_FILE],
-    [CALYPSO_UPLOAD_FILES_BATCH, ELEPHANT_ADD_FILES],
-    [CALYPSO_ADD_WEBSITE, ELEPHANT_ADD_WEBSITE],
-    [CALYPSO_CREATE_BUCKET, ELEPHANT_CREATE_BUCKET],
+    new AddFileTool(),
+    new AddFilesTool(),
+    new AddWebsiteTool(),
+    new CreateBucketTool(),
   ],
 });
 
 const ALL: readonly ToolPreset[] = [elephant, elephantBuilder];
 
-/**
- * Every published surface, declared explicitly.
- *
- * No preset is derived from "all tools": adding a tool to the server must not
- * leak it onto a branded plugin until someone adds it here on purpose.
- */
+/** Every published surface, declared explicitly. */
 export const ToolPresetRegistry = Object.freeze({
   elephant,
   elephantBuilder,

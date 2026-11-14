@@ -20,7 +20,7 @@ If the user did not say which bucket, ask. If the bucket they name may not exist
 
 Give exactly one file source:
 
-- A file the user attached in ChatGPT: pass the attachment; ChatGPT hands the file to the tool.
+- A file the user attached in ChatGPT: pass it as `file`. ChatGPT supplies the file; Calypso imports it, keeping its name as the title.
 - A public link to a file: pass it as `sourceUrl`. Calypso downloads it directly (public hosts only, 25 MB at most) and works out the name and type itself.
 - Generated content (for example a summary the user asked you to save): pass it as `contentBase64` with a `filename` and `mimeType`.
 
@@ -28,10 +28,11 @@ Optional: `title` (a readable name), `tags`, `waitForIndexing: true` when the us
 
 ## Several files: `elephant-add-files`
 
-- Put each file in `items` (1 to 100), each with `filename`, `mimeType` and its content.
+- Put each file in `items` (1 to 100), each with `filename`, `mimeType` and its bytes as `contentBase64`.
+- For files the user attached in ChatGPT, call `elephant-add-file` once per file instead: attachments are passed one at a time.
 - Shared bucket fields (`bucket`, `bucketSlugs`, `bucketIds`, `createMissingBuckets`) apply to every item unless an item sets its own.
 - `waitForBatchReady: true` waits until the batch finishes and reports each item.
-- Prefer one batch over many single calls.
+- For generated content, prefer one batch over many single calls.
 
 ## Report what happened
 

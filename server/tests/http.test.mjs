@@ -14,6 +14,7 @@ import { HttpServer } from "../dist/http/HttpServer.js";
 import { McpEndpoint } from "../dist/http/McpEndpoint.js";
 import { ModelCatalogCache } from "../dist/http/ModelCatalogCache.js";
 import { ProtectedResourceMetadata } from "../dist/http/ProtectedResourceMetadata.js";
+import { RateLimiter } from "../dist/http/RateLimiter.js";
 import { ToolPresetRegistry } from "../dist/presets/ToolPresetRegistry.js";
 
 const ISSUER = "https://login.example.test";
@@ -26,6 +27,9 @@ let server;
 let baseUrl;
 let signingKey;
 let otherSigningKey;
+let limiter;
+// Generous enough for every other test here, small enough to exhaust.
+const LIMIT = 200;
 const aicoreCalls = [];
 
 const catalogLoader = async () => ({
@@ -61,12 +65,20 @@ before(async () => {
     (preset) => metadata.urlFor(preset),
   );
   const catalogs = new ModelCatalogCache(60_000, 10, catalogLoader);
+  limiter = new RateLimiter(LIMIT);
   const http = new HttpServer({
     endpoints: ToolPresetRegistry.all().map(
       (preset) =>
-        new McpEndpoint(preset, authenticator, catalogs, API_BASE, {
-          name: "@calypsohq/elephant-mcp-server",
-          version: "0.0.0-test",
+        new McpEndpoint({
+          preset,
+          authenticator,
+          catalogs,
+          limiter,
+          apiBaseUrl: API_BASE,
+          packageInfo: {
+            name: "@calypsohq/elephant-mcp-server",
+            version: "0.0.0-test",
+          },
         }),
     ),
     metadata,
@@ -287,4 +299,18 @@ test("ModelCatalogCache loads once per key within the TTL", async () => {
   now = 2000;
   await cache.get(config);
   assert.equal(loads, 2);
+});
+
+test("a caller over its request budget gets 429 with Retry-After", async () => {
+  // A fresh grant id gives this test its own budget.
+  const bearer = `Bearer ${await token({ gid: "g-throttled" })}`;
+  let last;
+  for (let i = 0; i <= LIMIT; i += 1) {
+    last = await post("/elephant/mcp", bearer);
+    if (last.status === 429) break;
+    await last.body?.cancel();
+  }
+  assert.equal(last.status, 429);
+  assert.ok(Number(last.headers.get("retry-after")) >= 1);
+  assert.match((await last.json()).error.message, /Too many requests/);
 });

@@ -1,5 +1,4 @@
-import type { CalypsoToolName } from "../config.js";
-import type { PublicToolSpec } from "./PublicToolSpec.js";
+import type { ElephantTool } from "../tools/ElephantTool.js";
 
 export type ToolPresetOptions = {
   /** Stable identifier, e.g. `elephant`. */
@@ -11,29 +10,27 @@ export type ToolPresetOptions = {
   /** Human name shown on consent and in protected-resource metadata. */
   readonly displayName: string;
   /** Routing guidance returned in `initialize.instructions`. */
-  readonly instructions?: string;
+  readonly instructions: string;
   /** OAuth scope a bearer token must carry to call this preset. */
   readonly scope: string;
-  /** Canonical tool → public presentation. Order is `tools/list` order. */
-  readonly tools: ReadonlyArray<readonly [CalypsoToolName, PublicToolSpec]>;
+  /** The tools this preset publishes, in `tools/list` order. */
+  readonly tools: readonly ElephantTool[];
 };
 
 /**
- * One published surface of the Calypso MCP server: which tools exist, what
- * they are called, and how a client is told to use them.
+ * One published plugin surface: its endpoint, its scope, and its tools.
  *
- * A preset is a value object. It is the single place that decides the public
- * tool surface, so `tools/list`, `calypso://server-info`, the protected
- * resource metadata, and the smoke tests all read the same answer.
+ * The preset is the single answer to "what does this endpoint offer", read by
+ * `tools/list`, the protected-resource metadata and the smoke probe alike.
  */
 export class ToolPreset {
   readonly id: string;
   readonly path: string;
   readonly serverName: string;
   readonly displayName: string;
-  readonly instructions?: string;
+  readonly instructions: string;
   readonly scope: string;
-  private readonly specs: ReadonlyMap<CalypsoToolName, PublicToolSpec>;
+  readonly tools: readonly ElephantTool[];
 
   constructor(options: ToolPresetOptions) {
     this.id = options.id;
@@ -42,58 +39,23 @@ export class ToolPreset {
     this.displayName = options.displayName;
     this.instructions = options.instructions;
     this.scope = options.scope;
-    this.specs = new Map(options.tools);
-    ToolPreset.assertUniquePublicNames(this.id, [...this.specs.values()]);
+    this.tools = options.tools;
+    ToolPreset.assertUniqueNames(this.id, this.toolNames());
   }
 
-  includes(tool: CalypsoToolName): boolean {
-    return this.specs.has(tool);
-  }
-
-  /** Public presentation of a canonical tool; throws when not in the preset. */
-  specFor(tool: CalypsoToolName): PublicToolSpec {
-    const spec = this.specs.get(tool);
-    if (!spec) {
-      throw new Error(`Tool ${tool} is not part of the ${this.id} preset.`);
-    }
-    return spec;
-  }
-
-  /** Public name for a canonical tool, or the canonical name when absent. */
-  publicName(tool: CalypsoToolName): string {
-    return this.specs.get(tool)?.name ?? tool;
-  }
-
-  canonicalTools(): CalypsoToolName[] {
-    return [...this.specs.keys()];
-  }
-
-  publicToolNames(): string[] {
-    return [...this.specs.values()].map((spec) => spec.name);
+  toolNames(): string[] {
+    return this.tools.map((tool) => tool.name);
   }
 
   /** Absolute resource URL (`aud`) for this preset under a public base URL. */
   resourceUrl(publicBaseUrl: string): string {
-    return new URL(
-      this.path,
-      ensureTrailingSlashless(publicBaseUrl),
-    ).toString();
+    return new URL(this.path, publicBaseUrl.replace(/\/+$/, "")).toString();
   }
 
-  private static assertUniquePublicNames(
-    id: string,
-    specs: PublicToolSpec[],
-  ): void {
-    const names = specs.map((spec) => spec.name);
+  private static assertUniqueNames(id: string, names: string[]): void {
     const duplicates = names.filter((name, i) => names.indexOf(name) !== i);
     if (duplicates.length > 0) {
-      throw new Error(
-        `Preset ${id} publishes duplicate tool names: ${duplicates.join(", ")}`,
-      );
+      throw new Error(`Preset ${id} publishes ${duplicates.join(", ")} twice.`);
     }
   }
-}
-
-function ensureTrailingSlashless(value: string): string {
-  return value.replace(/\/+$/, "");
 }

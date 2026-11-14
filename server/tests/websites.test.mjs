@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  addKnowledgeWebsite,
   importKnowledgeFileFromUrl,
   uploadKnowledgeFile,
-} from "../dist/files.js";
-import { addKnowledgeWebsite } from "../dist/websites.js";
+} from "./support/calypso.mjs";
 
 const CONFIG = {
   apiBaseUrl: "https://api.test/v1",
@@ -132,22 +132,14 @@ test("uploadKnowledgeFile dispatches sourceUrl to the import endpoint", async ()
   );
 });
 
-test("uploadKnowledgeFile rejects sourceUrl combined with local sources", async () => {
+test("uploadKnowledgeFile rejects sourceUrl combined with inline bytes", async () => {
   await assert.rejects(
     uploadKnowledgeFile(CONFIG, {
       sourceUrl: "https://example.com/doc.pdf",
       contentBase64: "aGk=",
       bucket: "docs",
     }),
-    /exactly one of `contentBase64`, `filePath`, or `sourceUrl`/,
-  );
-  await assert.rejects(
-    uploadKnowledgeFile(CONFIG, {
-      sourceUrl: "https://example.com/doc.pdf",
-      filePath: "/tmp/doc.pdf",
-      bucket: "docs",
-    }),
-    /exactly one of/,
+    /exactly one of `contentBase64` or `sourceUrl`/,
   );
 });
 

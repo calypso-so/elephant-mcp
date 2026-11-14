@@ -1,20 +1,21 @@
 import { createHash } from "node:crypto";
 
-import type { CalypsoRuntimeConfig } from "../config.js";
-import { type CalypsoRagModelCatalog, loadRagModelCatalog } from "../models.js";
+import type { AgentCatalogSnapshot } from "../calypso/AgentCatalog.js";
+import { loadAgentCatalog } from "../calypso/AgentCatalogLoader.js";
+import type { CalypsoApiConfig } from "../calypso/CalypsoApiConfig.js";
 
-type Entry = { catalog: Promise<CalypsoRagModelCatalog>; expiresAt: number };
+type Entry = { catalog: Promise<AgentCatalogSnapshot>; expiresAt: number };
 
 export type CatalogLoader = (
-  config: CalypsoRuntimeConfig,
-) => Promise<CalypsoRagModelCatalog>;
+  config: CalypsoApiConfig,
+) => Promise<AgentCatalogSnapshot>;
 
 /**
  * Per-key cache of the team's agent catalog for the hosted server.
  *
  * The stateless HTTP server builds a fresh McpServer for every request, and
  * each one needs the catalog; without this, every tools/list would cost an
- * AIcore round trip. Keyed by a hash so raw keys never sit in a map.
+ * Calypso API round trip. Keyed by a hash so raw keys never sit in a map.
  */
 export class ModelCatalogCache {
   private readonly entries = new Map<string, Entry>();
@@ -22,11 +23,11 @@ export class ModelCatalogCache {
   constructor(
     private readonly ttlMs = 60_000,
     private readonly maxEntries = 1_000,
-    private readonly load: CatalogLoader = loadRagModelCatalog,
+    private readonly load: CatalogLoader = loadAgentCatalog,
     private readonly now: () => number = Date.now,
   ) {}
 
-  get(config: CalypsoRuntimeConfig): Promise<CalypsoRagModelCatalog> {
+  get(config: CalypsoApiConfig): Promise<AgentCatalogSnapshot> {
     const key = createHash("sha256")
       .update(`${config.apiBaseUrl}|${config.apiKey ?? ""}`)
       .digest("hex");

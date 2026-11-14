@@ -31,22 +31,33 @@ An unauthenticated request gets `401` with `WWW-Authenticate: Bearer resource_me
 | `ELEPHANT_JWKS_URL` | `<issuer>/.well-known/jwks.json` | token signing keys |
 | `ELEPHANT_TOKEN_ENC_KEY` | — | 32-byte base64 key shared with the authorization server; unset turns OAuth off (API keys only) |
 | `CALYPSO_API_BASE_URL` | `https://api.calypso.so/v1` | Calypso API |
+| `ELEPHANT_REQUESTS_PER_MINUTE` | `120` | per-caller request budget |
 
 ## Layout
 
 ```
 src/
-  presets/    ToolPreset, ToolPresetRegistry, elephantCopy   what each plugin publishes, in Elephant's words
-  catalog/    ToolCatalog, HostedUploadPolicy, InputDescriptions   registers tools through a preset
-  auth/       BearerAuthenticator + ApiKeyStrategy, JwtGrantStrategy, TokenCipher, AuthChallenge
-  http/       HttpServer, McpEndpoint, ProtectedResourceMetadata, ModelCatalogCache, HttpConfig, HostedServer
-  server.ts   tool handlers (ask, search, buckets, sources, uploads, websites)
-  buckets.ts files.ts search.ts websites.ts models.ts   Calypso API calls
+  index.ts               entry point: reads HttpConfig, composes and starts the server
+  ElephantMcpServer.ts   builds one MCP server for one preset and one caller
+  tools/                 one class per tool, each owning its name, wording and inputs
+    ElephantTool.ts        base class: call() turns failures into readable tool errors
+    AskTool, SearchTool, ListBucketsTool, OpenSourceTool            (Elephant)
+    AddFileTool, AddFilesTool, AddWebsiteTool, CreateBucketTool     (Elephant Builder)
+    ToolContext.ts, ToolLogger.ts, schemaParts.ts
+  presets/               ToolPreset + ToolPresetRegistry: each plugin's path, scope and tools
+  calypso/               the Calypso API as one caller sees it (CalypsoApi groups the resources:
+                         AgentResponses, KnowledgeSearch, KnowledgeBuckets, KnowledgeFiles,
+                         KnowledgeBatches, KnowledgeWebsites) plus agent discovery
+  auth/                  BearerAuthenticator + ApiKeyStrategy, JwtGrantStrategy, TokenCipher, AuthChallenge
+  http/                  HttpServer, McpEndpoint, ProtectedResourceMetadata, ModelCatalogCache,
+                         RateLimiter, HttpConfig, HostedServer (composition root)
 ```
 
-Tools are declared once under a canonical operation id (`calypso-agent`, `calypso-search`, …, matching the Calypso API they call) and published under their Elephant names by the preset. Nothing a client sees carries a canonical id; `tests/presets.test.mjs` checks that.
+Each request builds a fresh `ElephantMcpServer` bound to the caller's key, so tools hold no state between calls. `elephant-ask` is stateless too: every question is its own conversation, and a follow-up must carry its subject in the prompt.
 
-Uploads take `contentBase64` or a public `sourceUrl`. Reading a path from disk is disabled: on a hosted server it would read the server's own files.
+Uploads take a ChatGPT attachment (`file`, declared in `_meta["openai/fileParams"]`), a public `sourceUrl`, or `contentBase64`. An attachment's temporary download link is handed to Calypso to import, so the bytes never pass through this server. Nothing reads from the server's disk.
+
+Each caller (grant or API key) gets `ELEPHANT_REQUESTS_PER_MINUTE` requests per minute across both endpoints (default 120); over that, `429` with `Retry-After`.
 
 ## Commands
 

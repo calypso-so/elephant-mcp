@@ -1,0 +1,77 @@
+import type {
+  CallToolResult,
+  ToolAnnotations,
+} from "@modelcontextprotocol/sdk/types.js";
+import type { z } from "zod";
+
+import type { ToolContext } from "./ToolContext.js";
+
+export type InputShape = Record<string, z.ZodTypeAny>;
+export type ToolArgs<Shape extends InputShape> = z.objectOutputType<
+  Shape,
+  z.ZodTypeAny
+>;
+
+/** What a tool produced: a JSON payload, or text, plus optional structure. */
+export type ToolOutput =
+  | { readonly json: unknown; readonly structured?: Record<string, unknown> }
+  | { readonly text: string };
+
+/**
+ * One Elephant tool: its public name, wording and inputs, and what it does.
+ *
+ * Each subclass owns everything a client sees about it, in Elephant's words,
+ * so there is no second layer that renames or rewrites tools on the way out.
+ * `call` turns failures into tool errors the model can read and act on,
+ * instead of protocol errors it cannot.
+ */
+export abstract class ElephantTool<Shape extends InputShape = InputShape> {
+  abstract readonly name: string;
+  abstract readonly title: string;
+  abstract readonly description: string;
+  abstract readonly inputSchema: Shape;
+  abstract readonly annotations: ToolAnnotations;
+  readonly outputSchema?: InputShape;
+  /**
+   * Top-level inputs that take a file the user attached in ChatGPT, declared
+   * in `_meta["openai/fileParams"]`.
+   */
+  readonly fileParams?: readonly string[];
+
+  /** First words of the error a failed call returns. */
+  protected abstract readonly failure: string;
+
+  protected abstract run(
+    args: ToolArgs<Shape>,
+    context: ToolContext,
+  ): Promise<ToolOutput>;
+
+  async call(
+    args: ToolArgs<Shape>,
+    context: ToolContext,
+  ): Promise<CallToolResult> {
+    try {
+      return ElephantTool.result(await this.run(args, context));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await context.log.event("error", `${this.name} failed.`, {
+        tool: this.name,
+        error: message,
+      });
+      return {
+        isError: true,
+        content: [{ type: "text", text: `Error: ${this.failure} ${message}` }],
+      };
+    }
+  }
+
+  private static result(output: ToolOutput): CallToolResult {
+    if ("text" in output) {
+      return { content: [{ type: "text", text: output.text }] };
+    }
+    return {
+      content: [{ type: "text", text: JSON.stringify(output.json, null, 2) }],
+      ...(output.structured ? { structuredContent: output.structured } : {}),
+    };
+  }
+}
