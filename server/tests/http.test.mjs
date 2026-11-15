@@ -65,7 +65,9 @@ before(async () => {
     (preset) => metadata.urlFor(preset),
   );
   const catalogs = new ModelCatalogCache(60_000, 10, catalogLoader);
-  limiter = new RateLimiter(LIMIT);
+  // A frozen clock: the budget never refills, so the 429 test does not
+  // depend on how fast the runner sends requests.
+  limiter = new RateLimiter(LIMIT, 10_000, () => 0);
   const http = new HttpServer({
     endpoints: ToolPresetRegistry.all().map(
       (preset) =>
