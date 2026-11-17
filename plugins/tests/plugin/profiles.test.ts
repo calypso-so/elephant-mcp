@@ -59,18 +59,30 @@ describe("profiles", () => {
         assert.equal(SlugTable.archiveName(expected.name, "1.0.0"), Fixtures.target.archiveName(profile));
       });
 
-      it("emits the manifest in the Octagon shape", () => {
+      it("emits the manifest in the portal's Codex layout", () => {
         assert.equal(manifest.name, expected.name);
         assert.equal(manifest.version, "1.0.0");
         assert.equal(manifest.skills, "./skills/");
+        assert.equal(manifest.mcpServers, "./.mcp.json");
+        assert.equal(manifest.license, "MIT");
         assert.equal(manifest.author.name, "Calypso");
         assert.equal(manifest.interface.displayName, expected.displayName);
+        assert.ok(manifest.interface.displayName.length <= 30);
+        assert.ok(manifest.interface.shortDescription.length <= 30);
         assert.equal(manifest.interface.websiteURL, "https://www.calypso.so/elephant");
+        assert.equal(manifest.interface.supportURL, "https://docs.calypso.so/elephant");
         assert.equal(manifest.interface.privacyPolicyURL, "https://www.calypso.so/privacy");
         assert.equal(manifest.interface.termsOfServiceURL, "https://www.calypso.so/terms");
-        assert.equal(manifest.interface.icon, "./assets/icon.png");
+        assert.equal(manifest.interface.composerIcon, "./assets/icon.png");
         assert.equal(manifest.interface.logo, "./assets/logo.png");
-        assert.ok(manifest.publication.releaseNotes.length > 0);
+        assert.equal(manifest.interface.defaultPrompt.length, 3);
+        assert.equal(manifest.review, undefined);
+        assert.equal(manifest.publication, undefined);
+        const ext = manifest.extensions["com.openai"];
+        assert.equal(ext.onboardingSkill, `./skills/${expected.name}-get-started/SKILL.md`);
+        assert.equal(ext.review.commerce, false);
+        assert.deepEqual(ext.publication.countries, []);
+        assert.ok(ext.publication.release_notes.length > 0);
       });
 
       it("points .mcp.json at the scoped endpoint only", () => {
@@ -86,14 +98,19 @@ describe("profiles", () => {
       });
 
       it("has 5 positive and 3 negative review cases, mirrored as smoke tests", () => {
-        const cases = manifest.review.test_cases as Array<Record<string, string>>;
-        assert.equal(cases.filter((testCase) => testCase.kind === "positive").length, 5);
-        assert.equal(cases.filter((testCase) => testCase.kind === "negative").length, 3);
+        const { positive, negative } = manifest.extensions["com.openai"].review.test_cases as {
+          positive: Array<Record<string, string>>;
+          negative: Array<Record<string, string>>;
+        };
+        assert.equal(positive.length, 5);
+        assert.equal(negative.length, 3);
+        for (const testCase of positive) assert.ok((expected.tools as readonly string[]).includes(testCase.tools_triggered ?? ""));
+        for (const testCase of negative) assert.equal(testCase.tools_triggered, undefined);
         assert.deepEqual(
-          profile.config.listing.smokeTests.map((test) => [test.id, test.prompt]),
-          cases.map((testCase) => [testCase.id, testCase.prompt]),
+          profile.config.listing.smokeTests.map((test) => test.prompt),
+          [...positive, ...negative].map((testCase) => testCase.prompt),
         );
-        assert.ok(cases.some((testCase) => testCase.routes_to === expected.sibling));
+        assert.ok(negative.some((testCase) => (testCase.expected_behavior ?? "").includes(expected.sibling)));
       });
 
       it("never mentions an internal calypso-* tool id", () => {

@@ -66,7 +66,19 @@ describe("ManifestShapeRule", () => {
   });
 
   it("rejects an icon path that is not in the package", async () => {
-    assert.ok((await messages(rule, view.without("assets/icon.png"))).some((message) => message.includes("icon")));
+    assert.ok((await messages(rule, view.without("assets/icon.png"))).some((message) => message.includes("composerIcon")));
+  });
+
+  it("requires the OpenAI extension with onboarding, review and publication", async () => {
+    const bad = Fixtures.withManifest(view, (manifest) => {
+      manifest.extensions["com.openai"].onboardingSkill = "./skills/nope/SKILL.md";
+      delete manifest.extensions["com.openai"].publication;
+    });
+    const found = await messages(rule, bad);
+    assert.ok(found.some((message) => message.includes("onboardingSkill")));
+    assert.ok(found.some((message) => message.includes("publication")));
+    const none = Fixtures.withManifest(view, (manifest) => delete manifest.extensions);
+    assert.ok((await messages(rule, none)).some((message) => message.includes('"extensions.com.openai" is required')));
   });
 });
 
@@ -128,7 +140,7 @@ describe("SkillToolRule", () => {
   });
 
   it("rejects a sibling tool in the manifest, where no routing exemption exists", async () => {
-    const bad = Fixtures.withManifest(view, (manifest) => manifest.interface.defaultPrompts.push("Run elephant-create-bucket"));
+    const bad = Fixtures.withManifest(view, (manifest) => manifest.interface.defaultPrompt.push("Run elephant-create-bucket"));
     assert.ok((await messages(rule, bad)).length > 0);
   });
 
@@ -192,23 +204,39 @@ describe("ForbiddenTextRule", () => {
 describe("ReviewCasesRule", () => {
   const rule = new ReviewCasesRule();
 
-  it("requires five positive and three negative cases", async () => {
+  it("requires exactly five positive and three negative cases", async () => {
     const bad = Fixtures.withManifest(view, (manifest) => {
-      manifest.review.test_cases = manifest.review.test_cases.filter((_: unknown, index: number) => index !== 0 && index !== 7);
+      const cases = manifest.extensions["com.openai"].review.test_cases;
+      cases.positive.shift();
+      cases.negative.pop();
     });
     const found = await messages(rule, bad);
     assert.ok(found.some((message) => message.includes("4 positive")));
     assert.ok(found.some((message) => message.includes("2 negative")));
   });
 
-  it("requires positive cases to expect a shipped tool and negatives to route", async () => {
+  it("requires positive cases to trigger a shipped tool and negatives none", async () => {
     const bad = Fixtures.withManifest(view, (manifest) => {
-      manifest.review.test_cases[0].expected_tool = "elephant-add-file";
-      delete manifest.review.test_cases[5].routes_to;
+      const cases = manifest.extensions["com.openai"].review.test_cases;
+      cases.positive[0].tools_triggered = "elephant-add-file";
+      cases.negative[0].tools_triggered = "elephant-ask";
     });
     const found = await messages(rule, bad);
-    assert.ok(found.some((message) => message.includes("must expect one of")));
-    assert.ok(found.some((message) => message.includes("routes_to")));
+    assert.ok(found.some((message) => message.includes("must trigger only")));
+    assert.ok(found.some((message) => message.includes("negative but triggers")));
+  });
+
+  it("requires negative profile cases to say where the request belongs", async () => {
+    const bad = profile.withConfig((config) => ({
+      ...config,
+      review: {
+        ...config.review,
+        test_cases: config.review.test_cases.map((testCase) =>
+          testCase.kind === "negative" ? { ...testCase, routes_to: "" } : testCase,
+        ),
+      },
+    }));
+    assert.ok((await messages(rule, view, bad)).some((message) => message.includes("routes_to")));
   });
 
   it("requires smoke tests to mirror the review cases", async () => {
@@ -229,8 +257,18 @@ describe("ListingTextRule", () => {
   const rule = new ListingTextRule();
 
   it("rejects a long or punctuated short description", async () => {
-    const bad = Fixtures.withManifest(view, (manifest) => (manifest.interface.shortDescription = `${"x".repeat(90)}.`));
+    const bad = Fixtures.withManifest(view, (manifest) => (manifest.interface.shortDescription = `${"x".repeat(31)}.`));
     assert.equal((await messages(rule, bad)).length, 2);
+  });
+
+  it("caps the display name and the starter prompts at the directory limits", async () => {
+    const bad = Fixtures.withManifest(view, (manifest) => {
+      manifest.interface.displayName = "Elephant by Calypso for Everyone!";
+      manifest.interface.defaultPrompt.push("One more prompt");
+    });
+    const found = await messages(rule, bad);
+    assert.ok(found.some((message) => message.includes("displayName is 33")));
+    assert.ok(found.some((message) => message.includes("defaultPrompt has 4")));
   });
 
   it("bounds the capability list", async () => {

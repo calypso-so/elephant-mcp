@@ -33,7 +33,7 @@
   },
   "interface": {
     "displayName": "Elephant Builder by Calypso",
-    "shortDescription": "Add files and websites to your team's Calypso knowledge",
+    "shortDescription": "Add files to your knowledge",
     "longDescription": "Elephant Builder by Calypso lets you teach Elephant without leaving ChatGPT. Add the files you attach in ChatGPT, public file links and websites to your team's Calypso knowledge, and create buckets to keep them organised. Every addition reports what was added, to which bucket, and whether it has finished indexing, so you can cite exactly what Elephant now knows. Elephant Builder only adds; it never deletes or edits your sources. To ask questions about your knowledge, use Elephant by Calypso.",
     "capabilities": [
       "Add ChatGPT attachments to a bucket",
@@ -51,14 +51,46 @@
   "listing": {
     "releaseState": "after-elephant-approval",
     "smokeTests": [
-      { "id": "add-attachment", "prompt": "Add the attached PDF to our Policies bucket.", "expect": "elephant-add-file; confirms file name, bucket and indexing status" },
-      { "id": "add-batch", "prompt": "Add these three attached files to the Onboarding bucket.", "expect": "elephant-add-files; reports each file's outcome" },
-      { "id": "add-website", "prompt": "Add https://www.calypso.so/elephant to the Website bucket.", "expect": "elephant-add-website; confirms the page and bucket" },
-      { "id": "create-bucket", "prompt": "Create a bucket called Sales playbooks.", "expect": "elephant-create-bucket; confirms name and slug" },
-      { "id": "add-to-new-bucket", "prompt": "Put the attached price list in a new bucket called Pricing.", "expect": "elephant-add-file with createMissingBuckets; confirms the new bucket" },
-      { "id": "ask-question", "prompt": "What does our refund policy say?", "expect": "no tool call; questions belong to Elephant by Calypso" },
-      { "id": "delete-source", "prompt": "Delete the old price list from my knowledge.", "expect": "no tool call; Elephant Builder only adds" },
-      { "id": "book-slot", "prompt": "Book me a meeting slot tomorrow at 3pm.", "expect": "no tool call; out of scope" }
+      {
+        "id": "add-attachment",
+        "prompt": "Add the attached PDF to our Policies bucket.",
+        "expect": "elephant-add-file; confirms file name, bucket and indexing status"
+      },
+      {
+        "id": "add-batch",
+        "prompt": "Add these three attached files to the Onboarding bucket.",
+        "expect": "elephant-add-files; reports each file's outcome"
+      },
+      {
+        "id": "add-website",
+        "prompt": "Add https://www.calypso.so/elephant to the Website bucket.",
+        "expect": "elephant-add-website; confirms the page and bucket"
+      },
+      {
+        "id": "create-bucket",
+        "prompt": "Create a bucket called Sales playbooks.",
+        "expect": "elephant-create-bucket; confirms name and slug"
+      },
+      {
+        "id": "add-to-new-bucket",
+        "prompt": "Put the attached price list in a new bucket called Pricing.",
+        "expect": "elephant-add-file with createMissingBuckets; confirms the new bucket"
+      },
+      {
+        "id": "ask-question",
+        "prompt": "What does our refund policy say?",
+        "expect": "no tool call; questions belong to Elephant by Calypso"
+      },
+      {
+        "id": "delete-source",
+        "prompt": "Delete the old price list from my knowledge.",
+        "expect": "no tool call; Elephant Builder only adds"
+      },
+      {
+        "id": "book-slot",
+        "prompt": "Book me a meeting slot tomorrow at 3pm.",
+        "expect": "no tool call; out of scope"
+      }
     ]
   },
   "review": {
@@ -66,6 +98,7 @@
       {
         "id": "add-attachment",
         "kind": "positive",
+        "description": "Add a ChatGPT attachment to a bucket",
         "prompt": "Add the attached PDF to our Policies bucket.",
         "expected_tool": "elephant-add-file",
         "expected_behavior": "Calls elephant-add-file with the attachment and the Policies bucket, then confirms the file name, the bucket and the indexing status."
@@ -73,6 +106,7 @@
       {
         "id": "add-batch",
         "kind": "positive",
+        "description": "Add several files in one request",
         "prompt": "Add these three attached files to the Onboarding bucket.",
         "expected_tool": "elephant-add-files",
         "expected_behavior": "Calls elephant-add-files once with all three files and the Onboarding bucket, then reports each file's outcome."
@@ -80,6 +114,7 @@
       {
         "id": "add-website",
         "kind": "positive",
+        "description": "Add a website as knowledge",
         "prompt": "Add https://www.calypso.so/elephant to the Website bucket.",
         "expected_tool": "elephant-add-website",
         "expected_behavior": "Calls elephant-add-website with the URL and the Website bucket, then confirms the page title and bucket."
@@ -87,6 +122,7 @@
       {
         "id": "create-bucket",
         "kind": "positive",
+        "description": "Create a bucket",
         "prompt": "Create a bucket called Sales playbooks.",
         "expected_tool": "elephant-create-bucket",
         "expected_behavior": "Calls elephant-create-bucket with the name and confirms the new bucket's name and slug."
@@ -94,6 +130,7 @@
       {
         "id": "add-to-new-bucket",
         "kind": "positive",
+        "description": "Create a bucket, then add to it",
         "prompt": "Put the attached price list in a new bucket called Pricing.",
         "expected_tool": "elephant-add-file",
         "expected_behavior": "Calls elephant-add-file with bucket slug pricing and createMissingBuckets, then confirms the file and the new bucket."
@@ -101,6 +138,7 @@
       {
         "id": "ask-question",
         "kind": "negative",
+        "description": "Questions belong to Elephant by Calypso",
         "prompt": "What does our refund policy say?",
         "routes_to": "Elephant by Calypso",
         "expected_behavior": "Does not call a tool. Explains that Elephant Builder adds knowledge and that Elephant by Calypso answers questions from it."
@@ -108,6 +146,7 @@
       {
         "id": "delete-source",
         "kind": "negative",
+        "description": "Deletion is not supported",
         "prompt": "Delete the old price list from my knowledge.",
         "routes_to": "Calypso console",
         "expected_behavior": "Does not call a tool. Explains that Elephant Builder only adds knowledge and that sources are removed in the Calypso console."
@@ -115,6 +154,7 @@
       {
         "id": "book-slot",
         "kind": "negative",
+        "description": "Scheduling is out of scope",
         "prompt": "Book me a meeting slot tomorrow at 3pm.",
         "routes_to": "Out of scope (scheduling)",
         "expected_behavior": "Does not call a tool. Explains that Elephant Builder adds knowledge and cannot book meetings."

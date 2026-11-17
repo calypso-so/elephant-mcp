@@ -8,12 +8,15 @@ import type { Rule } from "./Rule.js";
 export class ListingTextRule implements Rule {
   readonly id = "ListingTextRule";
 
-  static readonly SHORT_MAX = 80;
+  /** Directory submission caps the name and subtitle at 30 characters each. */
+  static readonly DISPLAY_MAX = 30;
+  static readonly SHORT_MAX = 30;
   static readonly LONG_MIN = 120;
   static readonly LONG_MAX = 1200;
   static readonly DESCRIPTION_MAX = 300;
   static readonly CAPABILITIES = { min: 2, max: 6, itemMax: 60 };
-  static readonly PROMPTS = { min: 2, max: 6, itemMax: 120 };
+  /** The portal takes at most three starter prompts of 128 characters. */
+  static readonly PROMPTS = { min: 2, max: 3, itemMax: 128 };
 
   async check(view: PackageView): Promise<Finding[]> {
     const out = new FindingList(this.id);
@@ -21,6 +24,9 @@ export class ListingTextRule implements Rule {
     const manifest = view.json<Record<string, any>>(path);
     if (!manifest) return out.findings;
     const ui = (manifest.interface ?? {}) as Record<string, unknown>;
+
+    const display = String(ui.displayName ?? "");
+    if (display.length > ListingTextRule.DISPLAY_MAX) out.error(`displayName is ${display.length} chars (max ${ListingTextRule.DISPLAY_MAX})`, path);
 
     const short = String(ui.shortDescription ?? "");
     if (short.length > ListingTextRule.SHORT_MAX) out.error(`shortDescription is ${short.length} chars (max ${ListingTextRule.SHORT_MAX})`, path);
@@ -36,7 +42,7 @@ export class ListingTextRule implements Rule {
     }
 
     ListingTextRule.list(out, ui.capabilities, "capabilities", ListingTextRule.CAPABILITIES, path, true);
-    ListingTextRule.list(out, ui.defaultPrompts, "defaultPrompts", ListingTextRule.PROMPTS, path, false);
+    ListingTextRule.list(out, ui.defaultPrompt, "defaultPrompt", ListingTextRule.PROMPTS, path, false);
     return out.findings;
   }
 

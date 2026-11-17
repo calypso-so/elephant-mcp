@@ -13,7 +13,7 @@ export class ManifestShapeRule implements Rule {
 
   private static readonly SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
   private static readonly SLUG = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
-  private static readonly TOP_STRINGS = ["name", "version", "description", "homepage", "skills"];
+  private static readonly TOP_STRINGS = ["name", "version", "description", "homepage", "skills", "mcpServers"];
   private static readonly INTERFACE_STRINGS = [
     "displayName",
     "shortDescription",
@@ -22,14 +22,16 @@ export class ManifestShapeRule implements Rule {
     "category",
     "brandColor",
     "brandColorDark",
-    "icon",
+    "composerIcon",
     "logo",
     "websiteURL",
+    "supportURL",
     "privacyPolicyURL",
     "termsOfServiceURL",
   ];
-  private static readonly INTERFACE_LISTS = ["capabilities", "defaultPrompts"];
-  private static readonly URL_FIELDS = ["websiteURL", "privacyPolicyURL", "termsOfServiceURL"];
+  private static readonly INTERFACE_LISTS = ["capabilities", "defaultPrompt"];
+  /** All four are required for an MCP review. */
+  private static readonly URL_FIELDS = ["websiteURL", "supportURL", "privacyPolicyURL", "termsOfServiceURL"];
 
   async check(view: PackageView, profile: Profile): Promise<Finding[]> {
     const out = new FindingList(this.id);
@@ -59,6 +61,9 @@ export class ManifestShapeRule implements Rule {
     if (manifest.skills !== ManifestBuilder.SKILLS_PATH) {
       out.error(`"skills" must be "${ManifestBuilder.SKILLS_PATH}"`, path);
     }
+    if (manifest.mcpServers !== ManifestBuilder.MCP_SERVERS_PATH) {
+      out.error(`"mcpServers" must be "${ManifestBuilder.MCP_SERVERS_PATH}"`, path);
+    }
     const author = manifest.author as Record<string, unknown> | undefined;
     if (!author || !ManifestShapeRule.nonEmpty(author.name)) out.error(`"author.name" is required`, path);
 
@@ -81,7 +86,7 @@ export class ManifestShapeRule implements Rule {
           out.error(`"interface.${field}" must be an https URL`, path);
         }
       }
-      for (const field of ["icon", "logo"]) {
+      for (const field of ["composerIcon", "logo"]) {
         const value = ui[field];
         if (typeof value === "string") {
           const relative = value.replace(/^\.\//, "");
@@ -90,11 +95,23 @@ export class ManifestShapeRule implements Rule {
       }
     }
 
-    const review = manifest.review as Record<string, unknown> | undefined;
-    if (!review || !Array.isArray(review.test_cases)) out.error(`"review.test_cases" is required`, path);
-    const publication = manifest.publication as Record<string, unknown> | undefined;
-    if (!publication || !Array.isArray(publication.countries) || !ManifestShapeRule.nonEmpty(publication.releaseNotes)) {
-      out.error(`"publication" needs countries and releaseNotes`, path);
+    const ext = ManifestBuilder.extension(manifest);
+    const prefix = `"extensions.${ManifestBuilder.EXTENSION}`;
+    if (!ext) {
+      out.error(`${prefix}" is required`, path);
+      return out.findings;
+    }
+    if (typeof ext.onboardingSkill !== "string" || !view.has(ext.onboardingSkill.replace(/^\.\//, ""))) {
+      out.error(`${prefix}.onboardingSkill" must point at a packaged SKILL.md`, path);
+    }
+    const cases = ext.review?.test_cases;
+    if (!cases || !Array.isArray(cases.positive) || !Array.isArray(cases.negative)) {
+      out.error(`${prefix}.review.test_cases" needs positive and negative lists`, path);
+    }
+    if (typeof ext.review?.commerce !== "boolean") out.error(`${prefix}.review.commerce" must be a boolean`, path);
+    const publication = ext.publication;
+    if (!publication || !Array.isArray(publication.countries) || !ManifestShapeRule.nonEmpty(publication.release_notes)) {
+      out.error(`${prefix}.publication" needs countries and release_notes`, path);
     }
     return out.findings;
   }

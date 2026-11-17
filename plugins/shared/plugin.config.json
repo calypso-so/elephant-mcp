@@ -5,14 +5,16 @@
     "url": "https://www.calypso.so"
   },
   "homepage": "https://www.calypso.so/elephant",
+  "license": "MIT",
   "interface": {
     "developerName": "Calypso",
     "category": "Productivity",
     "brandColor": "#3B2622",
     "brandColorDark": "#E9C4A8",
-    "icon": "./assets/icon.png",
+    "composerIcon": "./assets/icon.png",
     "logo": "./assets/logo.png",
     "websiteURL": "https://www.calypso.so/elephant",
+    "supportURL": "https://docs.calypso.so/elephant",
     "privacyPolicyURL": "https://www.calypso.so/privacy",
     "termsOfServiceURL": "https://www.calypso.so/terms"
   },

@@ -48,12 +48,19 @@ tests/plugin/          node:test suites
 3. A `Target` turns the `Profile` into a `PackageView`. `OpenAITarget` emits the Codex plugin layout:
 
    ```
-   .codex-plugin/plugin.json   ManifestBuilder: name, version, description, author, homepage, skills "./skills/",
-                               interface {...}, review.test_cases, publication
+   .codex-plugin/plugin.json   ManifestBuilder, in the portal's Codex layout: name, version, description, author,
+                               homepage, license, skills "./skills/", mcpServers "./.mcp.json", interface {...}
+                               (displayName and shortDescription ≤ 30 chars; website, support, privacy and terms
+                               URLs; defaultPrompt; composerIcon, logo), and extensions["com.openai"]
+                               { onboardingSkill, review { test_cases { positive[5], negative[3] },
+                               demo_recording_url, commerce }, publication { countries, release_notes } }
    .mcp.json                   {"mcpServers": {"<serverName>": {"url": "https://mcp.calypso.so/..."}}}
    assets/icon.png, logo.png
    skills/<name>/SKILL.md
    ```
+
+   The profile keeps its own case model (`id`, `kind`, `description`, `expected_tool`, `routes_to`); the builder
+   translates it into the portal's positive/negative lists (`tools_triggered`, `expected_behavior`).
 
    `.mcp.json` carries only the URL. ChatGPT finds the OAuth server from the endpoint's protected-resource metadata, so no key or secret is ever packaged.
 4. `Validator` runs every rule over the package. Errors stop the build.
@@ -69,8 +76,8 @@ tests/plugin/          node:test suites
 | `SkillToolRule` | a skill names another profile's Elephant tool outside a routing heading ("What Elephant does not do", "Not this plugin", "When not to use", "Related plugins"); the manifest names one at all; any `calypso-*` tool id appears anywhere; a shipped tool is not taught by any skill |
 | `NamingRule` | package name, display name, `.mcp.json` key and URL, OAuth scope, tool list, author or website differ from the plan's slug table, or the product name is misspelled |
 | `ForbiddenTextRule` | shared or profile patterns match: local-install leftovers (`npx`, other clients' setup, API-key variables, `filePath`), internal names, guessing language; `elephant` also forbids claiming it added anything |
-| `ReviewCasesRule` | fewer than 5 positive / 3 negative cases, a positive case does not expect a shipped tool, a negative case does not say where it routes, or `listing.smokeTests` does not mirror the cases (warns without `demo_recording_url`) |
-| `ListingTextRule` | short description over 80 chars or ending in punctuation, long description outside 120–1200 chars, capability or prompt counts out of range |
+| `ReviewCasesRule` | not exactly 5 positive / 3 negative cases, a positive case does not trigger a shipped tool, a negative case triggers one or does not say where it routes, or `listing.smokeTests` does not mirror the cases (warns without `demo_recording_url`) |
+| `ListingTextRule` | display name or short description over 30 chars (the directory's limit), short description ending in punctuation, long description outside 120–1200 chars, capability count out of range, more than 3 starter prompts |
 | `BrandColorRule` | `brandColor` is below 4.5:1 on light surfaces or `brandColorDark` below 4.5:1 on dark surfaces |
 | `ImageRule` | icon or logo is not a square PNG of the allowed size |
 | `LinkIntegrityRule` | a relative link in a skill does not resolve; with `--online`, an external URL does not answer 2xx/3xx |
@@ -86,12 +93,12 @@ tests/plugin/          node:test suites
 1. Edit `profiles/<p>/…` or `shared/…`. Never edit `out/`.
 2. Bump `version` in the profile's `plugin.config.json`. The directory keys updates on version and rejects a same-version resubmission.
 3. `npm test` and `npm run build -- --profile all` with 0 errors.
-4. Hand the ZIPs and `SHA256SUMS.txt` to whoever uploads to the OpenAI portal, with the commit they were built from.
+4. Upload the ZIP at https://platform.openai.com/plugins ("Upload new or existing plugin", then "With MCP"); the review cases, demo URL and release notes import from the manifest. Reviewer access to the demo team goes into the portal's secure form, never into the package.
 5. After approval, tag the commit `openai-<package>-v<version>`.
 
 ## Before the first submission
 
-- `https://www.calypso.so/elephant` must be live; `validate --online` fails until it is.
+- `https://www.calypso.so/elephant` and the support page `https://docs.calypso.so/elephant` must be live; `validate --online` fails until they are.
 - `review.demo_recording_url` for each package (a recording of the eight review prompts).
 - The review team with a demo bucket that the review cases are asked against.
 - The MCP endpoints and OAuth server must be deployed (built in `calypso-mcp-server` and `web-app-new`).

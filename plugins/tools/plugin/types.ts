@@ -44,9 +44,12 @@ export interface InterfaceConfig {
   readonly defaultPrompts: readonly string[];
   readonly brandColor: string;
   readonly brandColorDark: string;
-  readonly icon: string;
+  /** Icon shown in the composer (`interface.composerIcon`). */
+  readonly composerIcon: string;
   readonly logo: string;
   readonly websiteURL: string;
+  /** Customer support page; the portal requires it for MCP review. */
+  readonly supportURL: string;
   readonly privacyPolicyURL: string;
   readonly termsOfServiceURL: string;
 }
@@ -56,6 +59,8 @@ export type ReviewCaseKind = "positive" | "negative";
 export interface ReviewCase {
   readonly id: string;
   readonly kind: ReviewCaseKind;
+  /** One line naming the behaviour under test, shown to the reviewer. */
+  readonly description: string;
   readonly prompt: string;
   readonly expected_behavior: string;
   /** Positive cases: the tool ChatGPT is expected to call. */
@@ -114,6 +119,8 @@ export interface ProfileConfig {
   readonly description: string;
   readonly author: Author;
   readonly homepage: string;
+  readonly repository?: string;
+  readonly license?: string;
   readonly onboardingSkill: string;
   readonly mcp: McpConfig;
   readonly interface: InterfaceConfig;

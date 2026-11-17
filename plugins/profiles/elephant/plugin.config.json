@@ -33,7 +33,7 @@
   },
   "interface": {
     "displayName": "Elephant by Calypso",
-    "shortDescription": "Cited answers from your team's Calypso knowledge",
+    "shortDescription": "Cited answers from your docs",
     "longDescription": "Elephant by Calypso brings your team's Calypso knowledge into ChatGPT. Ask a question and Elephant answers from the files and websites your team added to Calypso, citing the source behind every claim. Search for exact passages, see which buckets of knowledge your team keeps, and check a source's details and indexing status. Elephant is read-only and never changes your knowledge. When your sources do not answer a question, Elephant says so instead of guessing. To add files or websites, use Elephant Builder by Calypso.",
     "capabilities": [
       "Cited answers from your team's knowledge",
@@ -51,14 +51,46 @@
   "listing": {
     "releaseState": "ready-for-review",
     "smokeTests": [
-      { "id": "ask-policy", "prompt": "Using Elephant, what does our knowledge say about the refund policy?", "expect": "elephant-ask; answer cites each claim by file name or URL" },
-      { "id": "search-passages", "prompt": "Search Elephant for passages that mention shipping times.", "expect": "elephant-search; passages listed with their sources" },
-      { "id": "list-buckets", "prompt": "Which Elephant buckets does my team have?", "expect": "elephant-list-buckets; buckets listed by name with source counts" },
-      { "id": "open-source", "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.", "expect": "elephant-open-source; file details and indexing status" },
-      { "id": "ask-follow-up", "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.", "expect": "elephant-ask twice in one thread; both answers cited" },
-      { "id": "add-file", "prompt": "Add this PDF to my Elephant knowledge.", "expect": "no tool call; explains Elephant is read-only and points to Elephant Builder by Calypso" },
-      { "id": "book-slot", "prompt": "Book me a meeting slot tomorrow at 3pm.", "expect": "no tool call; out of scope for Elephant" },
-      { "id": "general-question", "prompt": "What is the capital of Australia?", "expect": "no tool call; a general question, not team knowledge" }
+      {
+        "id": "ask-policy",
+        "prompt": "Using Elephant, what does our knowledge say about the refund policy?",
+        "expect": "elephant-ask; answer cites each claim by file name or URL"
+      },
+      {
+        "id": "search-passages",
+        "prompt": "Search Elephant for passages that mention shipping times.",
+        "expect": "elephant-search; passages listed with their sources"
+      },
+      {
+        "id": "list-buckets",
+        "prompt": "Which Elephant buckets does my team have?",
+        "expect": "elephant-list-buckets; buckets listed by name with source counts"
+      },
+      {
+        "id": "open-source",
+        "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.",
+        "expect": "elephant-open-source; file details and indexing status"
+      },
+      {
+        "id": "ask-follow-up",
+        "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.",
+        "expect": "elephant-ask twice in one thread; both answers cited"
+      },
+      {
+        "id": "add-file",
+        "prompt": "Add this PDF to my Elephant knowledge.",
+        "expect": "no tool call; explains Elephant is read-only and points to Elephant Builder by Calypso"
+      },
+      {
+        "id": "book-slot",
+        "prompt": "Book me a meeting slot tomorrow at 3pm.",
+        "expect": "no tool call; out of scope for Elephant"
+      },
+      {
+        "id": "general-question",
+        "prompt": "What is the capital of Australia?",
+        "expect": "no tool call; a general question, not team knowledge"
+      }
     ]
   },
   "review": {
@@ -66,6 +98,7 @@
       {
         "id": "ask-policy",
         "kind": "positive",
+        "description": "Answer a policy question with citations",
         "prompt": "Using Elephant, what does our knowledge say about the refund policy?",
         "expected_tool": "elephant-ask",
         "expected_behavior": "Calls elephant-ask and answers from the review team's sources, citing the file name or URL behind each claim."
@@ -73,6 +106,7 @@
       {
         "id": "search-passages",
         "kind": "positive",
+        "description": "Search for matching passages",
         "prompt": "Search Elephant for passages that mention shipping times.",
         "expected_tool": "elephant-search",
         "expected_behavior": "Calls elephant-search and lists the matching passages, each with the file name or URL it came from, without inventing an answer."
@@ -80,6 +114,7 @@
       {
         "id": "list-buckets",
         "kind": "positive",
+        "description": "List the team's buckets",
         "prompt": "Which Elephant buckets does my team have?",
         "expected_tool": "elephant-list-buckets",
         "expected_behavior": "Calls elephant-list-buckets and lists the team's buckets by name with how many sources each holds."
@@ -87,6 +122,7 @@
       {
         "id": "open-source",
         "kind": "positive",
+        "description": "Open one source's details",
         "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.",
         "expected_tool": "elephant-open-source",
         "expected_behavior": "Finds a source id with elephant-list-buckets, then calls elephant-open-source and reports the file name, type and indexing status."
@@ -94,6 +130,7 @@
       {
         "id": "ask-follow-up",
         "kind": "positive",
+        "description": "Two cited answers in one thread",
         "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.",
         "expected_tool": "elephant-ask",
         "expected_behavior": "Calls elephant-ask for the first question and again for the follow-up, restating the subject (the warranty) in the second prompt; both answers cite their sources."
@@ -101,6 +138,7 @@
       {
         "id": "add-file",
         "kind": "negative",
+        "description": "Adding a file belongs to Elephant Builder",
         "prompt": "Add this PDF to my Elephant knowledge.",
         "routes_to": "Elephant Builder by Calypso",
         "expected_behavior": "Does not call a tool. Explains that Elephant is read-only and that Elephant Builder by Calypso adds files and websites."
@@ -108,6 +146,7 @@
       {
         "id": "book-slot",
         "kind": "negative",
+        "description": "Scheduling is out of scope",
         "prompt": "Book me a meeting slot tomorrow at 3pm.",
         "routes_to": "Out of scope (scheduling)",
         "expected_behavior": "Does not call a tool. Explains that Elephant answers from the team's knowledge and cannot book meetings."
@@ -115,6 +154,7 @@
       {
         "id": "general-question",
         "kind": "negative",
+        "description": "General knowledge stays with ChatGPT",
         "prompt": "What is the capital of Australia?",
         "routes_to": "ChatGPT without Elephant (general knowledge)",
         "expected_behavior": "Does not call Elephant. The question is about the world, not the team's own knowledge."
