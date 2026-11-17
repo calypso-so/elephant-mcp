@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -51,10 +52,18 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
 
   protected async run(
     args: ToolArgs<typeof inputSchema>,
-    { api, log }: ToolContext,
+    { api, inventory, log }: ToolContext,
   ): Promise<ToolOutput> {
     if (args.agent?.trim() && args.buckets?.length) {
       throw new Error("Pass `agent` or `buckets`, not both.");
+    }
+    // Nothing to search yet: the hatch, not an empty result set.
+    if ((await inventory.current())?.isEmpty) {
+      await log.event("info", "Empty knowledge: answered with the hatch.", {
+        tool: this.name,
+        reason: "empty_knowledge",
+      });
+      return { text: emptyKnowledgeAnswer() };
     }
     const result = await api.search.search(args);
     await log.event("info", "Knowledge search completed.", {

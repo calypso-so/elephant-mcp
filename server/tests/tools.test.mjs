@@ -79,7 +79,13 @@ test("Elephant publishes its four read-only tools, in order", async () => {
   assert.equal(client.getServerVersion().name, "elephant");
   assert.match(client.getInstructions() ?? "", /Elephant by Calypso/);
   assert.equal(client.getServerCapabilities()?.resources, undefined);
-  assert.equal(client.getServerCapabilities()?.prompts, undefined);
+  // Elephant hatches: it publishes the one `elephant-get-started` prompt.
+  assert.ok(client.getServerCapabilities()?.prompts);
+  const { prompts } = await client.listPrompts();
+  assert.deepEqual(
+    prompts.map((prompt) => prompt.name),
+    ["elephant-get-started"],
+  );
 });
 
 test("Elephant Builder publishes its four write tools", async () => {

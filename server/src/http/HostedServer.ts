@@ -9,6 +9,7 @@ import type { PackageInfo } from "../ElephantMcpServer.js";
 import { ToolPresetRegistry } from "../presets/ToolPresetRegistry.js";
 import type { HttpConfig } from "./HttpConfig.js";
 import { HttpServer } from "./HttpServer.js";
+import { KnowledgeInventoryCache } from "./KnowledgeInventoryCache.js";
 import { McpEndpoint } from "./McpEndpoint.js";
 import { ModelCatalogCache } from "./ModelCatalogCache.js";
 import { ProtectedResourceMetadata } from "./ProtectedResourceMetadata.js";
@@ -44,6 +45,7 @@ export function composeHostedServer(
 
   const authenticator = new BearerAuthenticator(strategies, metadataUrl);
   const catalogs = new ModelCatalogCache();
+  const inventories = new KnowledgeInventoryCache();
   const limiter = new RateLimiter(config.requestsPerMinute);
   const endpoints = ToolPresetRegistry.all().map(
     (preset) =>
@@ -51,6 +53,7 @@ export function composeHostedServer(
         preset,
         authenticator,
         catalogs,
+        inventories,
         limiter,
         apiBaseUrl: config.apiBaseUrl,
         packageInfo,

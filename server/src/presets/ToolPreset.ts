@@ -15,6 +15,12 @@ export type ToolPresetOptions = {
   readonly scope: string;
   /** The tools this preset publishes, in `tools/list` order. */
   readonly tools: readonly ElephantTool[];
+  /**
+   * The preset answers questions, so it hatches: empty-team instructions,
+   * the `elephant-get-started` prompt, and the hatch card in place of an
+   * answer when there is nothing to answer from. Off for Builder.
+   */
+  readonly hatches?: boolean;
 };
 
 /**
@@ -31,6 +37,7 @@ export class ToolPreset {
   readonly instructions: string;
   readonly scope: string;
   readonly tools: readonly ElephantTool[];
+  readonly hatches: boolean;
 
   constructor(options: ToolPresetOptions) {
     this.id = options.id;
@@ -40,6 +47,7 @@ export class ToolPreset {
     this.instructions = options.instructions;
     this.scope = options.scope;
     this.tools = options.tools;
+    this.hatches = options.hatches ?? false;
     ToolPreset.assertUniqueNames(this.id, this.toolNames());
   }
 

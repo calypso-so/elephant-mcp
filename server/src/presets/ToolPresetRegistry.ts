@@ -26,6 +26,7 @@ const elephant = new ToolPreset({
     new ListBucketsTool(),
     new OpenSourceTool(),
   ],
+  hatches: true,
 });
 
 /** Elephant Builder by Calypso — adds sources and buckets. */

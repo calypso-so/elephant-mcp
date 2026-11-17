@@ -104,6 +104,22 @@ server verifies the token, unseals the grant's key ──▶ api.calypso.so/v1  
 | **Key travels sealed** | The grant's key rides inside the token, sealed with AES-256-GCM. Only this server and the authorization server hold the key to open it |
 | **Revocation is real** | Disconnect revokes the key. Calls fail within a minute, whatever token the client still holds |
 | **Fair use** | 120 requests per minute per caller across both plugins. Over that: `429` with `Retry-After` |
+| **Empty team says so** | A team with no ready source gets the first-minute card instead of an answer, and never a guess |
+
+## First minute
+
+The hatch lives in the protocol, not on a page. Right after Allow, the next thing a person sees is
+their assistant's reply — so that is where Elephant introduces itself, and only while it has to:
+
+- **Session instructions** change with the team: empty → *greet briefly, offer the three steps,
+  never answer from general knowledge*; with knowledge → the normal text plus *cite, and open the
+  source on request*.
+- **One prompt, `elephant-get-started`** — `/elephant:get-started` in Claude Code, a starter in
+  ChatGPT. Empty team: add a first source → wait for *ready* → ask something only your files know.
+  Team with knowledge: *"2 buckets, 41 sources ready"* and three questions drawn from its bucket names.
+- **The first answer on an empty team is the hatch**: `elephant-ask` and `elephant-search` return
+  the card instead of calling the agent. It stops the moment a source is ready — the only state is
+  the team's knowledge, read fresh (cached 20 s per caller, re-read once when it says empty).
 
 The authorization server lives in the Calypso web app at `login.calypso.so`, not here. This repo is the MCP server and the plugin packaging.
 

@@ -10,6 +10,7 @@ import {
   type PackageInfo,
 } from "../ElephantMcpServer.js";
 import type { ToolPreset } from "../presets/ToolPreset.js";
+import type { KnowledgeInventoryCache } from "./KnowledgeInventoryCache.js";
 import type { ModelCatalogCache } from "./ModelCatalogCache.js";
 import type { RateLimiter } from "./RateLimiter.js";
 
@@ -17,6 +18,11 @@ export type McpEndpointOptions = {
   readonly preset: ToolPreset;
   readonly authenticator: BearerAuthenticator;
   readonly catalogs: ModelCatalogCache;
+  /**
+   * The team's knowledge inventory, read only for presets that hatch. Absent
+   * (the HTTP tests), the inventory is unknown and nothing hatches.
+   */
+  readonly inventories?: KnowledgeInventoryCache;
   /** Shared by every endpoint, so a caller's budget spans both plugins. */
   readonly limiter: RateLimiter;
   readonly apiBaseUrl: string;
@@ -70,10 +76,17 @@ export class McpEndpoint {
       apiKey: credential.apiKey,
       apiBaseUrl: this.options.apiBaseUrl,
     };
+    const [agents, inventory] = await Promise.all([
+      this.options.catalogs.get(api),
+      this.preset.hatches && this.options.inventories
+        ? this.options.inventories.get(api)
+        : null,
+    ]);
     const server = createElephantMcpServer({
       preset: this.preset,
       api,
-      agents: await this.options.catalogs.get(api),
+      agents,
+      inventory,
       packageInfo: this.options.packageInfo,
       principal: credential.principal,
     });

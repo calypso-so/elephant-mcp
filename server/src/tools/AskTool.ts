@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { AgentResponses } from "../calypso/AgentResponses.js";
 import { compactStrings } from "../calypso/coerce.js";
+import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -41,6 +42,7 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     "Always cite the sources the answer returns. If the answer says the knowledge does not cover the question, say so plainly instead of answering from general knowledge.",
     "Each call stands alone: put everything needed to answer, including the subject of a follow-up, in the prompt.",
     "Optional `model` picks one of the team's Calypso agents; omit it to use the default.",
+    "When the team has no knowledge yet, the answer says so and how to add a first source; relay it, do not answer from general knowledge.",
   ].join("\n");
   readonly inputSchema = inputSchema;
   readonly annotations = { readOnlyHint: true, openWorldHint: true };
@@ -48,8 +50,17 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
 
   protected async run(
     args: ToolArgs<typeof inputSchema>,
-    { api, agents, log }: ToolContext,
+    { api, agents, inventory, log }: ToolContext,
   ): Promise<ToolOutput> {
+    // An empty team gets the hatch, never an apology from an agent with
+    // nothing to retrieve. Only when the inventory is known (hosted server).
+    if ((await inventory.current())?.isEmpty) {
+      await log.event("info", "Empty knowledge: answered with the hatch.", {
+        tool: this.name,
+        reason: "empty_knowledge",
+      });
+      return { text: emptyKnowledgeAnswer() };
+    }
     const agentId = agents.resolve(args.model);
     const fileIds = compactStrings(args.fileIds);
     const conversationId = AgentResponses.newConversationId();
