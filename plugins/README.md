@@ -77,7 +77,7 @@ tests/plugin/          node:test suites
 | `NamingRule` | package name, display name, `.mcp.json` key and URL, OAuth scope, tool list, author or website differ from the plan's slug table, or the product name is misspelled |
 | `ForbiddenTextRule` | shared or profile patterns match: local-install leftovers (`npx`, other clients' setup, API-key variables, `filePath`), internal names, guessing language; `elephant` also forbids claiming it added anything |
 | `ReviewCasesRule` | not exactly 5 positive / 3 negative cases, a positive case does not trigger a shipped tool, a negative case triggers one or does not say where it routes, or `listing.smokeTests` does not mirror the cases (warns without `demo_recording_url`) |
-| `ListingTextRule` | display name or short description over 30 chars (the directory's limit), short description ending in punctuation, long description outside 120–1200 chars, capability count out of range, more than 3 starter prompts |
+| `ListingTextRule` | display name or short description over 30 chars (the directory's limit), short description ending in punctuation, long description outside 120–2000 chars, capability count out of range, more than 3 starter prompts |
 | `BrandColorRule` | `brandColor` is below 4.5:1 on light surfaces or `brandColorDark` below 4.5:1 on dark surfaces |
 | `ImageRule` | icon or logo is not a square PNG of the allowed size |
 | `LinkIntegrityRule` | a relative link in a skill does not resolve; with `--online`, an external URL does not answer 2xx/3xx |

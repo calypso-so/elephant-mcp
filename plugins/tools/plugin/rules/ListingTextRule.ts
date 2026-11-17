@@ -12,7 +12,8 @@ export class ListingTextRule implements Rule {
   static readonly DISPLAY_MAX = 30;
   static readonly SHORT_MAX = 30;
   static readonly LONG_MIN = 120;
-  static readonly LONG_MAX = 1200;
+  /** The portal allows 4000; 2000 keeps the listing readable. */
+  static readonly LONG_MAX = 2000;
   static readonly DESCRIPTION_MAX = 300;
   static readonly CAPABILITIES = { min: 2, max: 6, itemMax: 60 };
   /** The portal takes at most three starter prompts of 128 characters. */
