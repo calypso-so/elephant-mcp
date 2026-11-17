@@ -4,7 +4,7 @@
 
 # an elephant never forgets
 
-**Elephant gives ChatGPT your team's memory. Answers come from your own files and websites, with the source attached.**
+**Elephant gives your AI your team's memory. Claude, ChatGPT, Cursor — any MCP client — answers from your own files and websites, with the source attached.**
 
 <a href="https://github.com/calypso-so/elephant/actions/workflows/ci.yml"><img src="https://github.com/calypso-so/elephant/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-3B2622?style=flat-square" alt="MCP Streamable HTTP"></a>
@@ -13,14 +13,14 @@
 
 <table>
 <tr>
-<td align="center" width="25%"><h3>8 tools</h3>in two plugins<br><sub><a href="#pick-your-plugin">4 to read, 4 to write</a></sub></td>
+<td align="center" width="25%"><h3>1 URL</h3>to connect<br><sub><a href="#install">no key to paste</a></sub></td>
+<td align="center" width="25%"><h3>8 tools</h3>on two servers<br><sub><a href="#pick-your-server">4 to read, 4 to write</a></sub></td>
 <td align="center" width="25%"><h3>0 databases</h3>on this server<br><sub><a href="#how-it-works">every request stands alone</a></sub></td>
-<td align="center" width="25%"><h3>15 minutes</h3>per access token<br><sub><a href="#how-it-works">bound to one endpoint</a></sub></td>
 <td align="center" width="25%"><h3>1 click</h3>to disconnect<br><sub><a href="#privacy">key revoked, access ends</a></sub></td>
 </tr>
 </table>
 
-**[Install](#install) · [Pick your plugin](#pick-your-plugin) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
+**[Install](#install) · [Pick your server](#pick-your-server) · [First minute](#first-minute) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
 
 </div>
 
@@ -28,8 +28,8 @@
 
 <table>
 <tr>
-<th width="50%">ChatGPT alone</th>
-<th width="50%"><img src="plugins/shared/assets/icon.png" width="18" height="18" alt=""> ChatGPT with Elephant</th>
+<th width="50%">Your AI alone</th>
+<th width="50%"><img src="plugins/shared/assets/icon.png" width="18" height="18" alt=""> Your AI with Elephant</th>
 </tr>
 <tr>
 <td valign="top">
@@ -51,29 +51,37 @@
 
 ## Install
 
-Elephant connects to ChatGPT over OAuth. Nothing to download, no key to paste.
+Elephant is a hosted MCP server. You give your client one URL; it opens a sign-in, you pick a team and press Allow. No download, no key to paste, nothing to keep secret.
 
-1. In ChatGPT's settings, turn on developer mode for apps.
-2. Create an app with the endpoint for the plugin you want:
+```text
+https://mcp.calypso.so/elephant/mcp
+```
 
-   ```text
-   https://mcp.calypso.so/elephant/mcp
-   ```
+| Client | How |
+|---|---|
+| **Claude Code** | `claude mcp add --scope user --transport http elephant https://mcp.calypso.so/elephant/mcp`, then open the sign-in link it prints |
+| **Claude Desktop, Cursor, Windsurf, and others** | Add a remote (Streamable HTTP) server with the URL above; the client discovers sign-in on its own |
+| **ChatGPT** | Settings → Apps → developer mode → add an app with the URL above |
+| **Any MCP client** | Streamable HTTP + OAuth 2.1 with dynamic registration and PKCE. If it can talk to a remote MCP server, it can talk to Elephant |
 
-3. Sign in to Calypso, pick a team, and allow access. Done.
+Hand-written config, where a client wants one:
+
+```json
+{ "mcpServers": { "elephant": { "type": "http", "url": "https://mcp.calypso.so/elephant/mcp" } } }
+```
 
 Disconnect any time from **API Keys** in Calypso. The connection ends with the key.
 
-<sub>Directory listing pending review. Until then, developer mode is the way in. Needs a Calypso workspace with knowledge in it.</sub>
+<sub>Needs a Calypso workspace. No knowledge in it yet? Elephant will tell you, and show you the first step — see [First minute](#first-minute).</sub>
 
-## Pick your plugin
+## Pick your server
 
-| Plugin | Endpoint | Scope | Tools |
+| Server | Endpoint | Scope | Tools |
 |---|---|---|---|
 | **Elephant by Calypso** · `elephant` | `/elephant/mcp` | `elephant:read` | Ask Elephant · Search Elephant · List buckets · Open a source |
 | **Elephant Builder by Calypso** · `elephant-builder` | `/elephant/builder/mcp` | `elephant:write` | Add a file · Add files · Add a website · Create a bucket |
 
-Elephant only reads. Builder adds to your knowledge and never deletes. Elephant ships first; Builder follows once Elephant is approved.
+Elephant only reads. Builder adds to your knowledge and never deletes. Most teams connect Elephant alone and add sources in Calypso; connect Builder when you want your AI to file things for you.
 
 | Tool | What it does |
 |---|---|
@@ -81,15 +89,23 @@ Elephant only reads. Builder adds to your knowledge and never deletes. Elephant 
 | `elephant-search` | Matching passages and where they live, no answer written |
 | `elephant-list-buckets` | The team's knowledge buckets, to aim a search |
 | `elephant-open-source` | One source's details: name, type, size, and whether it is ready |
-| `elephant-add-file` | Adds a file attached in ChatGPT, a public URL, or base64 bytes |
+| `elephant-add-file` | Adds a file the client attached, a public URL, or base64 bytes |
 | `elephant-add-files` | Up to 100 files in one request |
 | `elephant-add-website` | Adds a web page; Calypso reads it and writes its title, summary and tags |
 | `elephant-create-bucket` | A new bucket to hold sources |
 
+## First minute
+
+The hatch lives in the protocol, not on a page. Right after Allow, the next thing a person sees is their assistant's reply — so that is where Elephant introduces itself, and only while it has to:
+
+- **Session instructions** change with the team: empty → *greet briefly, offer the three steps, never answer from general knowledge*; with knowledge → the normal text plus *cite, and open the source on request*.
+- **One prompt, `elephant-get-started`** — `/elephant:get-started` in Claude Code, a starter wherever the client surfaces prompts. Empty team: add a first source → wait for *ready* → ask something only your files know. Team with knowledge: *"2 buckets, 41 sources ready"* and three questions drawn from its bucket names.
+- **The first answer on an empty team is the hatch**: `elephant-ask` and `elephant-search` return the card instead of calling the agent. It stops the moment a source is ready — the only state is the team's knowledge, read fresh (cached 20 s per caller, re-read once when it says empty).
+
 ## How it works
 
 ```text
-ChatGPT ──POST──▶ mcp.calypso.so/elephant/mcp                 server/  (this repo)
+your AI client ──POST──▶ mcp.calypso.so/elephant/mcp          server/  (this repo)
    │                401 + WWW-Authenticate ─▶ /.well-known/oauth-protected-resource/elephant/mcp
    └──OAuth 2.1 (PKCE, dynamic registration)──▶ login.calypso.so/oauth/*      Calypso web app
                                                  consent mints a scoped Calypso API key
@@ -99,36 +115,21 @@ server verifies the token, unseals the grant's key ──▶ api.calypso.so/v1  
 | Rule | What it means |
 |---|---|
 | **No state** | No database, no sessions. Every `POST` builds a fresh server for its caller, so any instance serves any request |
-| **One key per grant** | Allowing access mints a Calypso API key scoped to the plugin: read for Elephant, add and create for Builder |
-| **Short, bound tokens** | ES256 JWT, 15 minutes, audience = the endpoint URL. A token for one plugin is refused on the other |
+| **One key per grant** | Allowing access mints a Calypso API key scoped to the server: read for Elephant, add and create for Builder |
+| **Short, bound tokens** | ES256 JWT, 15 minutes, audience = the endpoint URL. A token for one server is refused on the other |
 | **Key travels sealed** | The grant's key rides inside the token, sealed with AES-256-GCM. Only this server and the authorization server hold the key to open it |
 | **Revocation is real** | Disconnect revokes the key. Calls fail within a minute, whatever token the client still holds |
-| **Fair use** | 120 requests per minute per caller across both plugins. Over that: `429` with `Retry-After` |
+| **Fair use** | 120 requests per minute per caller across both servers. Over that: `429` with `Retry-After` |
 | **Empty team says so** | A team with no ready source gets the first-minute card instead of an answer, and never a guess |
 
-## First minute
-
-The hatch lives in the protocol, not on a page. Right after Allow, the next thing a person sees is
-their assistant's reply — so that is where Elephant introduces itself, and only while it has to:
-
-- **Session instructions** change with the team: empty → *greet briefly, offer the three steps,
-  never answer from general knowledge*; with knowledge → the normal text plus *cite, and open the
-  source on request*.
-- **One prompt, `elephant-get-started`** — `/elephant:get-started` in Claude Code, a starter in
-  ChatGPT. Empty team: add a first source → wait for *ready* → ask something only your files know.
-  Team with knowledge: *"2 buckets, 41 sources ready"* and three questions drawn from its bucket names.
-- **The first answer on an empty team is the hatch**: `elephant-ask` and `elephant-search` return
-  the card instead of calling the agent. It stops the moment a source is ready — the only state is
-  the team's knowledge, read fresh (cached 20 s per caller, re-read once when it says empty).
-
-The authorization server lives in the Calypso web app at `login.calypso.so`, not here. This repo is the MCP server and the plugin packaging.
+The authorization server lives in the Calypso web app at `login.calypso.so`, not here. This repo is the MCP server and the packaging for app directories.
 
 ## Privacy
 
-- **Your files stay in Calypso.** A ChatGPT attachment reaches Calypso through its temporary download link. The bytes never pass through this server, and nothing is written to its disk.
+- **Your files stay in Calypso.** A file your client attaches reaches Calypso through the client's temporary download link. The bytes never pass through this server, and nothing is written to its disk.
 - **No prompts stored here.** The server keeps no database. It logs tool names, ids, counts and errors, never question text, answers or file contents.
 - **Your team decides.** Access needs a team member's consent. It ends within 15 minutes of that person leaving the team, and within a minute of Disconnect.
-- **No secret in a package.** The plugin ZIPs carry only the endpoint URL. ChatGPT finds sign-in from the server's protected-resource metadata.
+- **No secret anywhere.** Configs and app packages carry only the endpoint URL. A client finds sign-in from the server's protected-resource metadata.
 
 ## Build
 
@@ -136,13 +137,13 @@ Node 20 or later. CI runs both on every pull request and every push to `main`, o
 
 ```bash
 cd server  && npm ci && npm test && npm run lint && npm run smoke   # MCP server
-cd plugins && npm ci && npm test && npm run build -- --profile all  # plugin ZIPs + SHA256SUMS
+cd plugins && npm ci && npm test && npm run build -- --profile all  # directory packages + SHA256SUMS
 ```
 
 | Folder | What it is | Read more |
 |---|---|---|
-| [`server/`](server/) | The hosted MCP server: one class per tool, presets, OAuth bearer auth, rate limit | [server/README.md](server/README.md) |
-| [`plugins/`](plugins/) | Profiles, skills and the packaging tool. Same tree, same bytes: builds are reproducible | [plugins/README.md](plugins/README.md) |
+| [`server/`](server/) | The hosted MCP server: one class per tool, presets, OAuth bearer auth, rate limit, the first-minute hatch | [server/README.md](server/README.md) |
+| [`plugins/`](plugins/) | Profiles, skills and the packaging tool for app directories. Same tree, same bytes: builds are reproducible | [plugins/README.md](plugins/README.md) |
 
 Probe a live deployment, `tools/list` included:
 
@@ -166,7 +167,7 @@ SMOKE_BASE_URL=https://mcp.calypso.so SMOKE_API_KEY=sk-… npm run smoke
 
 ## License
 
-[MIT](LICENSE). The tool handlers started as a copy of [`calypso-mcp-server`](https://github.com/calypso-so/calypso-mcp-server) 3.0.0 and are maintained here on their own. That project stays the local `npx` server for Claude Desktop, Cursor and other MCP clients.
+[MIT](LICENSE). The tool handlers started as a copy of [`calypso-mcp-server`](https://github.com/calypso-so/calypso-mcp-server) 3.0.0 and are maintained here on their own. That project stays the local `npx` server for clients that want a key-based, local process instead.
 
 ---
 
