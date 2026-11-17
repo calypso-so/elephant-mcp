@@ -20,8 +20,8 @@ import { ToolPresetRegistry } from "../dist/presets/ToolPresetRegistry.js";
 
 const API_BASE = "https://api.example.test/v1";
 const agents = {
-  models: [{ id: "calypso-agent" }],
-  defaultModel: "calypso-agent",
+  models: [{ id: "elephant-agent" }],
+  defaultModel: "elephant-agent",
   fetchedAt: null,
   source: "api",
 };

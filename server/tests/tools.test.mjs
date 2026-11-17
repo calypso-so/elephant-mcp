@@ -9,8 +9,8 @@ import { ToolPresetRegistry } from "../dist/presets/ToolPresetRegistry.js";
 
 const API_BASE = "https://api.example.test/v1";
 const agents = {
-  models: [{ id: "calypso-agent" }, { id: "calypso-agent:sales" }],
-  defaultModel: "calypso-agent",
+  models: [{ id: "elephant-agent" }, { id: "elephant-agent:sales" }],
+  defaultModel: "elephant-agent",
   fetchedAt: null,
   source: "api",
 };
@@ -229,7 +229,7 @@ test("elephant-ask streams one stateless question to the default agent", async (
     "Bearer sk-test",
   );
   const body = calls[0].body;
-  assert.equal(body.model, "calypso-agent");
+  assert.equal(body.model, "elephant-agent");
   assert.equal(body.stream, true);
   assert.match(body.conversation.id, /^conv_[0-9a-f]{32}$/);
   assert.equal(body.previous_response_id, undefined);
@@ -246,7 +246,7 @@ test("elephant-ask refuses an agent the team does not have, naming the ones it h
   assert.equal(result.isError, true);
   assert.match(
     text(result),
-    /Unknown agent `someone-else`.*calypso-agent, calypso-agent:sales/,
+    /Unknown agent `someone-else`.*elephant-agent, elephant-agent:sales/,
   );
   assert.equal(calls.length, 0);
 });
@@ -256,7 +256,7 @@ test("elephant-search refuses agent and buckets together", async () => {
   const client = await connect(ToolPresetRegistry.elephant);
   const result = await client.callTool({
     name: "elephant-search",
-    arguments: { query: "refunds", agent: "calypso-agent", buckets: ["docs"] },
+    arguments: { query: "refunds", agent: "elephant-agent", buckets: ["docs"] },
   });
   assert.equal(result.isError, true);
   assert.equal(calls.length, 0);

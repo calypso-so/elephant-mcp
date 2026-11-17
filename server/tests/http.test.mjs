@@ -33,8 +33,8 @@ const LIMIT = 200;
 const aicoreCalls = [];
 
 const catalogLoader = async () => ({
-  models: [{ id: "calypso-agent" }],
-  defaultModel: "calypso-agent",
+  models: [{ id: "elephant-agent" }],
+  defaultModel: "elephant-agent",
   fetchedAt: null,
   source: "fallback",
 });

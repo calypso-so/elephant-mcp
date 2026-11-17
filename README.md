@@ -99,7 +99,7 @@ Elephant only reads. Builder adds to your knowledge and never deletes. Most team
 The hatch lives in the protocol, not on a page. Right after Allow, the next thing a person sees is their assistant's reply — so that is where Elephant introduces itself, and only while it has to:
 
 - **Session instructions** change with the team: empty → *greet briefly, offer the three steps, never answer from general knowledge*; with knowledge → the normal text plus *cite, and open the source on request*.
-- **One prompt, `elephant-get-started`** — `/elephant:get-started` in Claude Code, a starter wherever the client surfaces prompts. Empty team: add a first source → wait for *ready* → ask something only your files know. Team with knowledge: *"2 buckets, 41 sources ready"* and three questions drawn from its bucket names.
+- **One prompt, `elephant-get-started`** — `/mcp__elephant__elephant-get-started` in Claude Code, a starter wherever the client surfaces prompts. Empty team: add a first source → wait for *ready* → ask something only your files know. Team with knowledge: *"2 buckets, 41 sources ready"* and three questions drawn from its bucket names.
 - **The first answer on an empty team is the hatch**: `elephant-ask` and `elephant-search` return the card instead of calling the agent. It stops the moment a source is ready — the only state is the team's knowledge, read fresh (cached 20 s per caller, re-read once when it says empty).
 
 ## How it works

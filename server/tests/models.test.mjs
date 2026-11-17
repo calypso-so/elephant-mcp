@@ -13,8 +13,8 @@ test("fallbackAgentCatalog returns the base agent", () => {
   const catalog = fallbackAgentCatalog();
 
   assert.equal(catalog.source, "fallback");
-  assert.deepEqual(modelIdsFromCatalog(catalog), ["calypso-agent"]);
-  assert.equal(catalog.defaultModel, "calypso-agent");
+  assert.deepEqual(modelIdsFromCatalog(catalog), ["elephant-agent"]);
+  assert.equal(catalog.defaultModel, "elephant-agent");
 });
 
 test("loadAgentCatalog falls back without an API key", async () => {
@@ -23,7 +23,7 @@ test("loadAgentCatalog falls back without an API key", async () => {
   });
 
   assert.equal(catalog.source, "fallback");
-  assert.deepEqual(modelIdsFromCatalog(catalog), ["calypso-agent"]);
+  assert.deepEqual(modelIdsFromCatalog(catalog), ["elephant-agent"]);
 });
 
 test("loadAgentCatalog parses REST model discovery response", async () => {
@@ -37,8 +37,8 @@ test("loadAgentCatalog parses REST model discovery response", async () => {
         team_id: "team_123",
         data: [
           {
-            id: "calypso-agent",
-            base_model: "calypso-agent",
+            id: "elephant-agent",
+            base_model: "elephant-agent",
             profile_id: null,
             source: "default_policy",
             enabled: true,
@@ -55,8 +55,8 @@ test("loadAgentCatalog parses REST model discovery response", async () => {
             missing_bucket_ids: [],
           },
           {
-            id: "calypso-agent:pricing",
-            base_model: "calypso-agent",
+            id: "elephant-agent:pricing",
+            base_model: "elephant-agent",
             profile_id: "pricing",
             source: "named_profile",
             enabled: true,
@@ -88,8 +88,8 @@ test("loadAgentCatalog parses REST model discovery response", async () => {
 
     assert.equal(catalog.source, "api");
     assert.deepEqual(modelIdsFromCatalog(catalog), [
-      "calypso-agent",
-      "calypso-agent:pricing",
+      "elephant-agent",
+      "elephant-agent:pricing",
     ]);
     assert.deepEqual(catalog.models[0].bucket_ids, ["bucket-default"]);
     assert.equal(catalog.models[0].buckets[0].name, "Default Docs");
@@ -113,15 +113,15 @@ test("api catalog takes its default from the discovery response", async () => {
         object: "rag_agent_model_list",
         data: [
           {
-            id: "calypso-agent",
-            base_model: "calypso-agent",
+            id: "elephant-agent",
+            base_model: "elephant-agent",
             profile_id: null,
             source: "default_policy",
             enabled: true,
           },
           {
-            id: "calypso-agent:pricing",
-            base_model: "calypso-agent",
+            id: "elephant-agent:pricing",
+            base_model: "elephant-agent",
             profile_id: "pricing",
             source: "named_profile",
             enabled: true,
@@ -136,7 +136,7 @@ test("api catalog takes its default from the discovery response", async () => {
       apiBaseUrl: "https://api.example.com/v1",
     });
     assert.equal(catalog.source, "api");
-    assert.equal(catalog.defaultModel, "calypso-agent");
+    assert.equal(catalog.defaultModel, "elephant-agent");
     assert.ok(modelIdsFromCatalog(catalog).includes(catalog.defaultModel));
   } finally {
     globalThis.fetch = originalFetch;

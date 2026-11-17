@@ -14,10 +14,11 @@ import {
 
 /**
  * Id of the agent every Calypso team has. It is an API model id (data the
- * Calypso API defines), used only so asking still works when discovery is
+ * Calypso API defines; `elephant-agent` since Step 2 of the Elephant rename,
+ * 2026-11-17), used only so asking still works when discovery is
  * unreachable; it is never part of anything a client reads.
  */
-const BASE_AGENT_ID = "calypso-agent";
+const BASE_AGENT_ID = "elephant-agent";
 
 // Discovery runs on the request path of every cold cache entry, so it gets a
 // short budget: a slow answer must degrade to the fallback, not stall a call.
