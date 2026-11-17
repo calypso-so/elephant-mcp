@@ -86,6 +86,7 @@ before(async () => {
     metadata,
     maxBodyBytes: 1024 * 1024,
     version: "0.0.0-test",
+    openaiChallengeToken: "challenge-token-test",
   });
   node.on("request", (req, res) => void http.route(req, res));
   server = node;
@@ -265,6 +266,35 @@ test("a raw Calypso API key works on the Elephant endpoints", async () => {
 test("there is no Calypso-wide /mcp endpoint", async () => {
   const res = await post("/mcp", `Bearer ${GRANT_KEY}`);
   assert.equal(res.status, 404);
+});
+
+test("serves the OpenAI domain challenge as the bare token", async () => {
+  const res = await fetch(`${baseUrl}/.well-known/openai-apps-challenge`);
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type"), /^text\/plain/);
+  assert.equal(await res.text(), "challenge-token-test");
+  const posted = await fetch(`${baseUrl}/.well-known/openai-apps-challenge`, {
+    method: "POST",
+  });
+  assert.equal(posted.status, 405);
+});
+
+test("without a challenge token the path is not found", async () => {
+  const bare = new HttpServer({
+    endpoints: [],
+    metadata: new ProtectedResourceMetadata(baseUrl, ISSUER),
+    maxBodyBytes: 1024,
+    version: "0.0.0-test",
+  }).createNodeServer();
+  await new Promise((resolve) => bare.listen(0, "127.0.0.1", resolve));
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:${bare.address().port}/.well-known/openai-apps-challenge`,
+    );
+    assert.equal(res.status, 404);
+  } finally {
+    await new Promise((resolve) => bare.close(resolve));
+  }
 });
 
 test("health check answers", async () => {

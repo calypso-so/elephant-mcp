@@ -19,5 +19,9 @@ services:
         value: https://login.calypso.so
       - key: CALYPSO_API_BASE_URL
         value: https://api.calypso.so/v1
+      # OpenAI plugin portal domain verification. Public: the server serves it
+      # at /.well-known/openai-apps-challenge.
+      - key: ELEPHANT_OPENAI_CHALLENGE_TOKEN
+        value: "-o3i46cR3iSRrLrF4CbJ1ZVRq0xO8IyLXDa8GvvkaZg"
       - key: ELEPHANT_TOKEN_ENC_KEY
         sync: false

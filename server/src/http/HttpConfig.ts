@@ -18,6 +18,7 @@ const DEFAULT_REQUESTS_PER_MINUTE = 120;
  * | ELEPHANT_TOKEN_ENC_KEY     | 32-byte base64 key for the `ek` claim; unset = OAuth off, API keys only |
  * | CALYPSO_API_BASE_URL       | Calypso API base URL (…/v1)                          |
  * | ELEPHANT_REQUESTS_PER_MINUTE | per-caller request budget (default 120)            |
+ * | ELEPHANT_OPENAI_CHALLENGE_TOKEN | OpenAI plugin portal domain-verification token (public) |
  */
 export class HttpConfig {
   private constructor(
@@ -29,6 +30,7 @@ export class HttpConfig {
     readonly apiBaseUrl: string,
     readonly maxBodyBytes: number,
     readonly requestsPerMinute: number,
+    readonly openaiChallengeToken: string | undefined,
   ) {}
 
   static fromEnv(env: NodeJS.ProcessEnv): HttpConfig {
@@ -51,6 +53,7 @@ export class HttpConfig {
         DEFAULT_REQUESTS_PER_MINUTE,
         "ELEPHANT_REQUESTS_PER_MINUTE",
       ),
+      env.ELEPHANT_OPENAI_CHALLENGE_TOKEN?.trim() || undefined,
     );
   }
 

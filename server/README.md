@@ -49,6 +49,7 @@ An unauthenticated request gets `401` with `WWW-Authenticate: Bearer resource_me
 | `ELEPHANT_TOKEN_ENC_KEY` | — | 32-byte base64 key shared with the authorization server; unset turns OAuth off (API keys only) |
 | `CALYPSO_API_BASE_URL` | `https://api.calypso.so/v1` | Calypso API |
 | `ELEPHANT_REQUESTS_PER_MINUTE` | `120` | per-caller request budget |
+| `ELEPHANT_OPENAI_CHALLENGE_TOKEN` | — | OpenAI plugin portal domain-verification token, served as plain text at `/.well-known/openai-apps-challenge`; unset answers 404 |
 
 ## Layout
 

@@ -65,6 +65,7 @@ export function composeHostedServer(
     metadata,
     maxBodyBytes: config.maxBodyBytes,
     version: packageInfo.version,
+    openaiChallengeToken: config.openaiChallengeToken,
     log: (line) => console.log(JSON.stringify(line)),
   });
 }

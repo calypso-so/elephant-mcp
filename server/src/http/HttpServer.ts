@@ -16,6 +16,8 @@ const CORS_HEADERS = {
   "Access-Control-Expose-Headers": "WWW-Authenticate, Mcp-Session-Id",
 };
 
+export const OPENAI_CHALLENGE_PATH = "/.well-known/openai-apps-challenge";
+
 class HttpError extends Error {
   constructor(
     readonly status: number,
@@ -30,6 +32,12 @@ export type HttpServerOptions = {
   metadata: ProtectedResourceMetadata;
   maxBodyBytes: number;
   version: string;
+  /**
+   * The token OpenAI's plugin portal gave for this host, served as plain
+   * text at `/.well-known/openai-apps-challenge` to prove the domain is ours.
+   * Public by design; unset, the path answers 404.
+   */
+  openaiChallengeToken?: string;
   log?: (line: Record<string, unknown>) => void;
 };
 
@@ -101,6 +109,14 @@ export class HttpServer {
 
     if (path === "/healthz" && req.method === "GET") {
       return this.json(res, 200, { ok: true, version: this.options.version });
+    }
+
+    if (path === OPENAI_CHALLENGE_PATH && this.options.openaiChallengeToken) {
+      if (req.method !== "GET") throw new HttpError(405, "Method not allowed.");
+      // Exactly the token: the portal rejects JSON or anything around it.
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+      res.end(this.options.openaiChallengeToken);
+      return undefined;
     }
 
     const described = this.metadataByPath.get(path);
