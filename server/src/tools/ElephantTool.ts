@@ -30,7 +30,18 @@ export abstract class ElephantTool<Shape extends InputShape = InputShape> {
   abstract readonly title: string;
   abstract readonly description: string;
   abstract readonly inputSchema: Shape;
-  abstract readonly annotations: ToolAnnotations;
+  /**
+   * The three hints a directory review reads are stated outright on every
+   * tool, never left to a default: whether it only reads, whether it can
+   * destroy anything, and whether it reaches beyond the caller's own
+   * knowledge (a public URL, say). The reading tools answer true, false,
+   * false.
+   */
+  abstract readonly annotations: ToolAnnotations & {
+    readOnlyHint: boolean;
+    destructiveHint: boolean;
+    openWorldHint: boolean;
+  };
   readonly outputSchema?: InputShape;
   /**
    * Top-level inputs that take a file the user attached in ChatGPT, declared

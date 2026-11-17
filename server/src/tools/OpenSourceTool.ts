@@ -32,8 +32,9 @@ export class OpenSourceTool extends ElephantTool<typeof inputSchema> {
   readonly inputSchema = inputSchema;
   readonly annotations = {
     readOnlyHint: true,
+    destructiveHint: false,
     idempotentHint: true,
-    openWorldHint: true,
+    openWorldHint: false,
   };
   protected readonly failure = "Opening the source failed.";
 

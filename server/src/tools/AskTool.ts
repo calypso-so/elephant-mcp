@@ -45,7 +45,11 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     "When the team has no knowledge yet, the answer says so and how to add a first source; relay it, do not answer from general knowledge.",
   ].join("\n");
   readonly inputSchema = inputSchema;
-  readonly annotations = { readOnlyHint: true, openWorldHint: true };
+  readonly annotations = {
+    readOnlyHint: true,
+    destructiveHint: false,
+    openWorldHint: false,
+  };
   protected readonly failure = "Elephant could not answer.";
 
   protected async run(

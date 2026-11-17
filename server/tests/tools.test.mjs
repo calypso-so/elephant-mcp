@@ -74,8 +74,12 @@ test("Elephant publishes its four read-only tools, in order", async () => {
       "elephant-open-source",
     ],
   );
-  for (const tool of tools)
+  // A directory review reads these three as explicit booleans on every tool.
+  for (const tool of tools) {
     assert.equal(tool.annotations?.readOnlyHint, true, tool.name);
+    assert.equal(tool.annotations?.destructiveHint, false, tool.name);
+    assert.equal(tool.annotations?.openWorldHint, false, tool.name);
+  }
   assert.equal(client.getServerVersion().name, "elephant");
   assert.match(client.getInstructions() ?? "", /Elephant by Calypso/);
   assert.equal(client.getServerCapabilities()?.resources, undefined);
@@ -103,6 +107,7 @@ test("Elephant Builder publishes its four write tools", async () => {
   for (const tool of tools) {
     assert.equal(tool.annotations?.readOnlyHint, false, tool.name);
     assert.equal(tool.annotations?.destructiveHint, false, tool.name);
+    assert.equal(typeof tool.annotations?.openWorldHint, "boolean", tool.name);
   }
 });
 
