@@ -6,7 +6,7 @@
 
 **Elephant gives your AI your team's memory. Claude, ChatGPT, Cursor — any MCP client — answers from your own files and websites, with the source attached.**
 
-<a href="https://github.com/calypso-so/elephant/actions/workflows/ci.yml"><img src="https://github.com/calypso-so/elephant/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml"><img src="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-3B2622?style=flat-square" alt="MCP Streamable HTTP"></a>
 <a href="#how-it-works"><img src="https://img.shields.io/badge/auth-OAuth_2.1_%2B_PKCE-E9C4A8?style=flat-square" alt="OAuth 2.1 + PKCE"></a>
 <a href="#license"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
@@ -201,7 +201,7 @@ The npm package publishes itself from `.github/workflows/publish.yml` on every p
 <a href="plugins/README.md">Packaging</a> ·
 <a href="render.yaml">Deploy</a> ·
 <a href="https://calypso.so">Calypso</a> ·
-<a href="https://github.com/calypso-so/elephant/issues">Issues</a>
+<a href="https://github.com/calypso-so/elephant-mcp/issues">Issues</a>
 </sub>
 
 </div>
