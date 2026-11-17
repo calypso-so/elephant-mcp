@@ -1,0 +1,57 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish @calypsohq/elephant-mcp-server
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Verify npm package scope
+        run: |
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          if [ "${PACKAGE_NAME}" != "@calypsohq/elephant-mcp-server" ]; then
+            echo "Unexpected package name: ${PACKAGE_NAME}"
+            exit 1
+          fi
+
+      - name: Check npm version
+        id: npm-version
+        run: |
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} is already published; skipping npm publish."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # prepublishOnly runs lint, typecheck, the tests and the stdio smoke.
+      - name: Publish to npm
+        if: steps.npm-version.outputs.published == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

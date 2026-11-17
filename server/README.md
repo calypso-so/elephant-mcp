@@ -1,6 +1,23 @@
 # Elephant MCP server
 
-Hosted, stateless MCP server for Elephant by Calypso. One process serves both plugins over Streamable HTTP.
+The MCP server for Elephant by Calypso, in two shapes from one codebase:
+
+- **Hosted**: stateless, one process serves both plugins over Streamable HTTP with OAuth (`dist/index.js`, deployed at `mcp.calypso.so`).
+- **Local**: `elephant-mcp` on stdio for one API key, published to npm as `@calypsohq/elephant-mcp-server` (`dist/stdio.js`).
+
+## Local (stdio)
+
+```bash
+CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server [--preset all|elephant|elephant-builder]
+```
+
+| Env | Default | Purpose |
+|---|---|---|
+| `CALYPSO_API_KEY` | — | the caller's Calypso API key (required; env only, never a flag) |
+| `CALYPSO_API_BASE_URL` | `https://api.calypso.so/v1` | Calypso API |
+| `ELEPHANT_PRESET` | `all` | default for `--preset` |
+
+`all` publishes both tool sets under the `elephant` server name and hatches like Elephant; it exists only locally, the registry never serves it over HTTP. Discovery and the knowledge inventory load once at startup. Nothing of ours writes to stdout, which belongs to the protocol; `--help` and `--version` answer on stderr.
 
 ## Endpoints
 
@@ -37,7 +54,9 @@ An unauthenticated request gets `401` with `WWW-Authenticate: Bearer resource_me
 
 ```
 src/
-  index.ts               entry point: reads HttpConfig, composes and starts the server
+  index.ts               hosted entry point: reads HttpConfig, composes and starts the HTTP server
+  stdio.ts               local entry point (`elephant-mcp`): one server over stdio for the key in the env
+  stdio/                 StdioOptions (flags + env) and LocalPresets (`all`, the local-only preset)
   ElephantMcpServer.ts   builds one MCP server for one preset and one caller
   tools/                 one class per tool, each owning its name, wording and inputs
     ElephantTool.ts        base class: call() turns failures into readable tool errors
@@ -65,9 +84,11 @@ Each caller (grant or API key) gets `ELEPHANT_REQUESTS_PER_MINUTE` requests per 
 npm ci
 npm test          # build + node --test
 npm run lint
-npm run smoke     # spawns the server locally and probes discovery, challenges, 405s
+npm run smoke     # spawns the HTTP server locally and probes discovery, challenges, 405s
+npm run smoke:stdio                        # spawns elephant-mcp per preset and checks tools/list
+SMOKE_API_KEY=sk-… npm run smoke:stdio     # same, plus a real elephant-list-buckets call
 SMOKE_BASE_URL=https://mcp.calypso.so SMOKE_API_KEY=sk-… npm run smoke   # probe a deployment, including tools/list
 npm start         # node dist/index.js
 ```
 
-Deployment is described by [`../render.yaml`](../render.yaml) (service `elephant-mcp`, manual deploys).
+Deployment is described by [`../render.yaml`](../render.yaml) (service `elephant-mcp`, manual deploys). The npm package publishes from [`../.github/workflows/publish.yml`](../.github/workflows/publish.yml) on push to `main` when the version is new; `prepublishOnly` runs lint, typecheck, tests and the stdio smoke first.

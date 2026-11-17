@@ -72,6 +72,25 @@ Hand-written config, where a client wants one:
 
 Disconnect any time from **API Keys** in Calypso. The connection ends with the key.
 
+### Run it locally
+
+The same server ships on npm as [`@calypsohq/elephant-mcp-server`](https://www.npmjs.com/package/@calypsohq/elephant-mcp-server) for clients that want a local stdio server, or for a key you manage yourself. It needs Node 20 or later and a Calypso API key from **API Keys** in Calypso; the key is read from the environment, never from a flag.
+
+```bash
+CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server
+```
+
+| Client | How |
+|---|---|
+| **Claude Code** | `claude mcp add --scope user -e CALYPSO_API_KEY=sk-… elephant -- npx -y @calypsohq/elephant-mcp-server` |
+| **Claude Desktop, Cursor, Windsurf, and others** | Add a stdio server with the config below |
+
+```json
+{ "mcpServers": { "elephant": { "command": "npx", "args": ["-y", "@calypsohq/elephant-mcp-server"], "env": { "CALYPSO_API_KEY": "sk-…" } } } }
+```
+
+Locally it publishes all eight tools under one name, since the key is yours. `--preset elephant` keeps it read-only; `--preset elephant-builder` keeps only the add tools. `CALYPSO_API_BASE_URL` points it at another Calypso API.
+
 <sub>Needs a Calypso workspace. No knowledge in it yet? Elephant will tell you, and show you the first step — see [First minute](#first-minute).</sub>
 
 ## Pick your server
@@ -142,7 +161,7 @@ cd plugins && npm ci && npm test && npm run build -- --profile all  # directory 
 
 | Folder | What it is | Read more |
 |---|---|---|
-| [`server/`](server/) | The hosted MCP server: one class per tool, presets, OAuth bearer auth, rate limit, the first-minute hatch | [server/README.md](server/README.md) |
+| [`server/`](server/) | The MCP server, hosted (Streamable HTTP, OAuth) and local (stdio, published to npm): one class per tool, presets, bearer auth, rate limit, the first-minute hatch | [server/README.md](server/README.md) |
 | [`plugins/`](plugins/) | Profiles, skills and the packaging tool for app directories. Same tree, same bytes: builds are reproducible | [plugins/README.md](plugins/README.md) |
 
 Probe a live deployment, `tools/list` included:
@@ -154,6 +173,8 @@ SMOKE_BASE_URL=https://mcp.calypso.so SMOKE_API_KEY=sk-… npm run smoke
 ## Deploy
 
 [`render.yaml`](render.yaml) describes the service: `elephant-mcp`, root `server/`, health check `/healthz`, manual deploys.
+
+The npm package publishes itself from `.github/workflows/publish.yml` on every push to `main` whose `server/package.json` version is not on the registry yet (environment `npm-publish`, secret `NPM_TOKEN`). Bump the version in the same pull request as the change.
 
 | Env | Default | Purpose |
 |---|---|---|

@@ -1,10 +1,31 @@
 {
   "name": "@calypsohq/elephant-mcp-server",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Elephant by Calypso: hosted MCP server (Streamable HTTP, OAuth) for ChatGPT and other remote MCP clients.",
+  "version": "1.1.0",
+  "description": "Elephant by Calypso: MCP server for your team's Calypso knowledge. Hosted (Streamable HTTP, OAuth) or local over stdio with an API key.",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "elephant-mcp": "dist/stdio.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "elephant",
+    "calypso",
+    "rag",
+    "knowledge",
+    "claude",
+    "chatgpt",
+    "cursor"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "author": "Calypso",
   "homepage": "https://www.calypso.so/elephant",
@@ -17,13 +38,15 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/stdio.js', '755')\"",
     "typecheck": "tsc --noEmit",
     "start": "node dist/index.js",
     "test": "npm run build && node --test tests/*.test.mjs",
     "smoke": "node scripts/smoke-http.mjs",
     "lint": "biome check --indent-style=space --indent-width=2 src scripts tests",
-    "format": "biome format --write --indent-style=space --indent-width=2 src scripts tests"
+    "format": "biome format --write --indent-style=space --indent-width=2 src scripts tests",
+    "smoke:stdio": "node scripts/smoke-stdio.mjs",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test && npm run smoke:stdio"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
