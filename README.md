@@ -167,7 +167,7 @@ SMOKE_BASE_URL=https://mcp.calypso.so SMOKE_API_KEY=sk-… npm run smoke
 
 ## License
 
-[MIT](LICENSE). The tool handlers started as a copy of [`calypso-mcp-server`](https://github.com/calypso-so/calypso-mcp-server) 3.0.0 and are maintained here on their own. That project stays the local `npx` server for clients that want a key-based, local process instead.
+[MIT](LICENSE).
 
 ---
 
