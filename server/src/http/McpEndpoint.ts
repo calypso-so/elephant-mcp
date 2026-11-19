@@ -29,6 +29,13 @@ export type McpEndpointOptions = {
   readonly packageInfo: PackageInfo;
 };
 
+/** What one request to an endpoint came to: a served principal, or a refusal. */
+export type EndpointOutcome = {
+  readonly principal?: string;
+  /** Why authentication refused the request; see AuthChallenge.logReason. */
+  readonly refused?: string;
+};
+
 /**
  * One preset served over stateless Streamable HTTP.
  *
@@ -43,27 +50,27 @@ export class McpEndpoint {
     this.preset = options.preset;
   }
 
-  /** Returns the principal handled, or undefined when refused. */
+  /** Who was served, or why the request was refused. */
   async handle(
     req: IncomingMessage,
     res: ServerResponse,
     body: unknown,
-  ): Promise<string | undefined> {
+  ): Promise<EndpointOutcome> {
     const result = await this.options.authenticator.authenticate(
       req.headers.authorization,
       this.preset,
     );
     if (result instanceof AuthChallenge) {
       McpEndpoint.refuse(res, result);
-      return undefined;
+      return { refused: result.logReason() };
     }
     const decision = this.options.limiter.take(result.principal);
     if (!decision.allowed) {
       McpEndpoint.throttle(res, decision.retryAfterSeconds);
-      return result.principal;
+      return { principal: result.principal };
     }
     await this.serve(req, res, body, result);
-    return result.principal;
+    return { principal: result.principal };
   }
 
   private async serve(

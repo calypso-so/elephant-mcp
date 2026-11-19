@@ -62,6 +62,16 @@ export class AuthChallenge {
     return `Bearer ${params.join(", ")}`;
   }
 
+  /**
+   * Why the request was refused, for the request log. Carries the error class
+   * and its fixed description only, never anything from the token.
+   */
+  logReason(): string {
+    if (!this.error) return "missing";
+    if (this.error === "insufficient_scope") return "insufficient_scope";
+    return `${this.error}: ${this.description}`;
+  }
+
   body(): Record<string, string> {
     return {
       error: this.error ?? "unauthorized",

@@ -5,7 +5,7 @@ import {
   type ServerResponse,
 } from "node:http";
 
-import type { McpEndpoint } from "./McpEndpoint.js";
+import type { EndpointOutcome, McpEndpoint } from "./McpEndpoint.js";
 import { ProtectedResourceMetadata } from "./ProtectedResourceMetadata.js";
 
 const CORS_HEADERS = {
@@ -81,9 +81,9 @@ export class HttpServer {
         /\/+$/,
         "",
       ) || "/";
-    let principal: string | undefined;
+    let outcome: EndpointOutcome | undefined;
     try {
-      principal = await this.dispatch(path, req, res);
+      outcome = await this.dispatch(path, req, res);
     } catch (error) {
       this.fail(res, error);
     } finally {
@@ -91,7 +91,10 @@ export class HttpServer {
         method: req.method,
         path,
         status: res.statusCode,
-        principal,
+        principal: outcome?.principal,
+        // Set on a 401/403 only: without it a refusal for a missing token and
+        // one for a rejected token are the same log line.
+        auth: outcome?.refused,
         ms: Date.now() - started,
         ua: req.headers["user-agent"],
       });
@@ -102,7 +105,7 @@ export class HttpServer {
     path: string,
     req: IncomingMessage,
     res: ServerResponse,
-  ): Promise<string | undefined> {
+  ): Promise<EndpointOutcome | undefined> {
     for (const [name, value] of Object.entries(CORS_HEADERS)) {
       res.setHeader(name, value);
     }
@@ -160,11 +163,7 @@ export class HttpServer {
     }
   }
 
-  private json(
-    res: ServerResponse,
-    status: number,
-    body: unknown,
-  ): string | undefined {
+  private json(res: ServerResponse, status: number, body: unknown): undefined {
     res.writeHead(status, { "Content-Type": "application/json" });
     res.end(JSON.stringify(body));
     return undefined;

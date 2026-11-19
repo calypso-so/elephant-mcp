@@ -31,6 +31,7 @@ let limiter;
 // Generous enough for every other test here, small enough to exhaust.
 const LIMIT = 200;
 const aicoreCalls = [];
+const requestLog = [];
 
 const catalogLoader = async () => ({
   models: [{ id: "elephant-agent" }],
@@ -87,6 +88,7 @@ before(async () => {
     maxBodyBytes: 1024 * 1024,
     version: "0.0.0-test",
     openaiChallengeToken: "challenge-token-test",
+    log: (line) => requestLog.push(line),
   });
   node.on("request", (req, res) => void http.route(req, res));
   server = node;
@@ -254,6 +256,54 @@ test("expired, foreign-signed and tampered tokens are refused", async () => {
     const res = await post("/elephant/mcp", `Bearer ${bad}`);
     assert.equal(res.status, 401);
   }
+});
+
+test("the request log says why a call was refused, and never holds the token", async () => {
+  const expired = await token(
+    {},
+    { expiresIn: Math.floor(Date.now() / 1000) - 60 },
+  );
+  const wrongAudience = await token({ aud: "https://other.example.test/mcp" });
+  const wrongScope = await token({
+    aud: `${baseUrl}/elephant/builder/mcp`,
+    scope: "elephant:read",
+  });
+  const cases = [
+    ["/elephant/mcp", undefined, "missing"],
+    ["/elephant/mcp", "Basic dXNlcjpwYXNz", "missing"],
+    [
+      "/elephant/mcp",
+      "Bearer not-a-token",
+      "invalid_token: Unrecognized bearer token.",
+    ],
+    [
+      "/elephant/mcp",
+      `Bearer ${expired}`,
+      "invalid_token: The access token expired.",
+    ],
+    [
+      "/elephant/mcp",
+      `Bearer ${wrongAudience}`,
+      "invalid_token: The access token is not valid here (aud).",
+    ],
+    ["/elephant/builder/mcp", `Bearer ${wrongScope}`, "insufficient_scope"],
+  ];
+  for (const [path, authorization, reason] of cases) {
+    requestLog.length = 0;
+    await post(path, authorization);
+    assert.equal(requestLog.length, 1);
+    assert.equal(requestLog[0].auth, reason);
+    assert.equal(requestLog[0].principal, undefined);
+    const line = JSON.stringify(requestLog[0]);
+    for (const secret of [expired, wrongAudience, wrongScope, "dXNlcjpwYXNz"]) {
+      assert.ok(!line.includes(secret));
+    }
+  }
+
+  requestLog.length = 0;
+  await post("/elephant/mcp", `Bearer ${await token()}`);
+  assert.equal(requestLog[0].principal, "grant:g1");
+  assert.equal(requestLog[0].auth, undefined);
 });
 
 test("a raw Calypso API key works on the Elephant endpoints", async () => {
