@@ -2,9 +2,11 @@
 
 <img src="plugins/shared/assets/logo.png" alt="Elephant by Calypso" width="200">
 
-# an elephant never forgets
+# Elephant: PDF AI & Docs Q&A for Claude, ChatGPT and Cursor
 
-**Elephant gives your AI your team's memory. Claude, ChatGPT, Cursor — any MCP client — answers from your own files and websites, with the source attached.**
+**The MCP server that lets your AI chat with your PDFs, documents and web pages, and show the page each answer came from.**
+
+*An elephant never forgets.*
 
 <a href="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml"><img src="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-3B2622?style=flat-square" alt="MCP Streamable HTTP"></a>
@@ -20,7 +22,7 @@
 </tr>
 </table>
 
-**[Install](#install) · [Pick your server](#pick-your-server) · [First minute](#first-minute) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
+**[What people use it for](#what-people-use-it-for) · [Install](#install) · [Pick your server](#pick-your-server) · [First minute](#first-minute) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
 
 </div>
 
@@ -34,20 +36,41 @@
 <tr>
 <td valign="top">
 
-> I don't have access to your company's internal policies, so I can't say what your refund window is. Refund windows are commonly 14 or 30 days; check your terms of service or ask your support team.
+> I can't see your lease, so I can't say whether you may sublet. Many leases allow it with the landlord's consent; check the subletting clause or ask your landlord.
 
 </td>
 <td valign="top">
 
-> 30 days from purchase, prorated after the first month.
+> Yes, with the landlord's written consent, requested 30 days ahead (clause 14.2).
 >
-> **Source:** *Refund policy.pdf* · Billing bucket
+> **Source:** *Lease-2026.pdf*, page 6 · Home bucket
 
 </td>
 </tr>
 </table>
 
 **Same question. One guess, one answer with its source.** <sub>Illustrative example.</sub>
+
+## What people use it for
+
+Save a file once, ask it any time, from whichever AI you already use. Elephant searches the text, tables and images in what you saved and answers only from them.
+
+| You have | You ask | You get |
+|---|---|---|
+| **Lecture notes, textbooks, slides** | *"Summarise chapter 4 and quiz me on it"* | Study notes you can check against the page |
+| **Research papers** | *"Which of my papers measure this, and how?"* | A literature review with the passage behind each claim |
+| **A lease, contract or insurance policy** | *"What does it say about ending early?"* | The clause, quoted, with its page |
+| **User manuals** | *"How do I reset the filter light?"* | The steps, without reading the manual |
+| **Invoices, receipts, statements** | *"What did I pay this supplier last year?"* | Totals, dates and line items from your PDFs |
+| **Books and long reports** | *"What is the argument of part two?"* | A summary, then answers to your follow-ups |
+| **Meeting notes and screenshots** | *"What did we decide about pricing?"* | The decision, the number or the name you half remember |
+
+**Why not paste the PDF into the chat?** A pasted file lives in one conversation, in one app, until the context runs out. Elephant keeps everything you saved, searches all of it at once, and works the same in Claude, ChatGPT and Cursor.
+
+- **Every answer shows its source**: the file, the page and the passage.
+- **It says when it does not know.** If your sources do not cover a question, Elephant says so and adds nothing of its own.
+- **Fast or deep, your call.** A quick lookup takes a few seconds; a comparison across several documents gets more work when you ask for it.
+- **A second brain with nothing to configure.** It is retrieval-augmented generation (RAG) over your own documents, without a vector database, an embedding model or a pipeline to run.
 
 ## Install
 
@@ -91,7 +114,7 @@ CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server
 
 Locally it publishes all eight tools under one name, since the key is yours. `--preset elephant` keeps it read-only; `--preset elephant-builder` keeps only the add tools. `CALYPSO_API_BASE_URL` points it at another Calypso API.
 
-<sub>Needs a Calypso workspace. No knowledge in it yet? Elephant will tell you, and show you the first step — see [First minute](#first-minute).</sub>
+<sub>Needs an Elephant account: sign up at [elephant.calypso.so](https://elephant.calypso.so). Nothing saved in it yet? Elephant will tell you, and show you the first step — see [First minute](#first-minute).</sub>
 
 ## Pick your server
 
@@ -100,13 +123,13 @@ Locally it publishes all eight tools under one name, since the key is yours. `--
 | **Elephant by Calypso** · `elephant` | `/elephant/mcp` | `elephant:read` | Ask Elephant · Search Elephant · List buckets · Open a source |
 | **Elephant Builder by Calypso** · `elephant-builder` | `/elephant/builder/mcp` | `elephant:write` | Add a file · Add files · Add a website · Create a bucket |
 
-Elephant only reads. Builder adds to your knowledge and never deletes. Most teams connect Elephant alone and add sources in Calypso; connect Builder when you want your AI to file things for you.
+Elephant only reads. Builder adds to your knowledge and never deletes. Most people connect Elephant alone and add files at elephant.calypso.so; connect Builder when you want your AI to save a PDF or a web page for you.
 
 | Tool | What it does |
 |---|---|
-| `elephant-ask` | Answers from the team's knowledge, with sources. Each question stands alone |
-| `elephant-search` | Matching passages and where they live, no answer written |
-| `elephant-list-buckets` | The team's knowledge buckets, to aim a search |
+| `elephant-ask` | Answers from your documents, with sources. `depth` (`fast`, `balanced`, `deep`) sets how much work the answer gets. Each question stands alone |
+| `elephant-search` | The matching passages in full and where they live, no answer written |
+| `elephant-list-buckets` | Your buckets (folders of sources), to aim a search |
 | `elephant-open-source` | One source's details: name, type, size, and whether it is ready |
 | `elephant-add-file` | Adds a file the client attached, a public URL, or base64 bytes |
 | `elephant-add-files` | Up to 100 files in one request |
@@ -194,7 +217,7 @@ The npm package publishes itself from `.github/workflows/publish.yml` on every p
 
 <div align="center">
 
-🐘 **Your team already wrote it down. Elephant remembers where.**
+🐘 **You already saved it. Elephant remembers where.**
 
 <sub>
 <a href="server/README.md">Server</a> ·

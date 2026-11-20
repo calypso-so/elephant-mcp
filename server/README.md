@@ -1,6 +1,15 @@
-# Elephant MCP server
+# Elephant MCP server: PDF AI & docs Q&A for Claude, ChatGPT and Cursor
 
-The MCP server for Elephant by Calypso, in two shapes from one codebase:
+Chat with your PDFs, documents and web pages from any MCP client, and get every answer with the file and page it came from. Save a file once at [elephant.calypso.so](https://elephant.calypso.so), then ask it from Claude, Claude Code, ChatGPT, Cursor or Windsurf.
+
+- **Ask** your lecture notes, research papers, contracts, manuals, invoices and reports a question, and get an answer that cites its source.
+- **Search** for the exact passage, returned in full with its file and page.
+- **Save** PDFs, file links and web pages into buckets (folders) without leaving the chat.
+- **No guessing**: when your sources do not cover a question, Elephant says so.
+
+It is retrieval-augmented generation (RAG) over your own documents with nothing to run: no vector database, no embeddings to manage. See the [full readme](https://github.com/calypso-so/elephant-mcp#readme) for use cases and the hosted, no-key install.
+
+One codebase, two shapes:
 
 - **Hosted**: stateless, one process serves both plugins over Streamable HTTP with OAuth (`dist/index.js`, deployed at `mcp.calypso.so`).
 - **Local**: `elephant-mcp` on stdio for one API key, published to npm as `@calypsohq/elephant-mcp-server` (`dist/stdio.js`).
