@@ -397,6 +397,144 @@ test("elephant-ask refuses an agent the team does not have, naming the ones it h
   assert.equal(calls.length, 0);
 });
 
+async function askAtDepth(depth, effort) {
+  const sse = [
+    { type: "response.output_text.delta", delta: "Returns within 30 days." },
+    {
+      type: "response.completed",
+      response: { id: "resp_d", ...(effort ? { reasoning: { effort } } : {}) },
+    },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
+  const calls = stubCalypso(
+    () =>
+      new Response(sse, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-ask",
+    arguments: {
+      prompt: "What is the refund policy?",
+      ...(depth ? { depth } : {}),
+    },
+  });
+  return { answer: text(result), body: calls[0].body, result };
+}
+
+test("elephant-ask sends the depth as the API's response policy", async () => {
+  for (const [depth, policy] of [
+    ["fast", "fast"],
+    ["balanced", "medium"],
+    ["deep", "extended"],
+  ]) {
+    const { body } = await askAtDepth(depth, null);
+    assert.equal(body.metadata.response_policy, policy);
+  }
+  // No depth asked: the request names none and the agent's default applies.
+  const { body } = await askAtDepth(undefined, null);
+  assert.equal("response_policy" in body.metadata, false);
+});
+
+test("elephant-ask closes with the depth the answer got", async () => {
+  for (const [effort, name] of [
+    ["low", "fast"],
+    ["minimal", "fast"],
+    ["medium", "balanced"],
+    ["high", "deep"],
+  ]) {
+    const { answer } = await askAtDepth(undefined, effort);
+    assert.equal(
+      answer,
+      `Returns within 30 days.\n\nAnswered at depth: ${name}.`,
+    );
+  }
+  // An effort the API does not report, or one this server does not know.
+  for (const effort of [null, "unheard-of"]) {
+    const { answer } = await askAtDepth("deep", effort);
+    assert.equal(answer, "Returns within 30 days.");
+  }
+});
+
+test("elephant-ask says when the team's plan capped the depth", async () => {
+  const { answer } = await askAtDepth("deep", "low");
+  assert.match(answer, /Answered at depth: fast \(asked for deep;/);
+  assert.match(answer, /a higher depth will not change the answer/);
+
+  // Answered at or above what was asked: a plain closing line.
+  const met = await askAtDepth("balanced", "medium");
+  assert.match(met.answer, /Answered at depth: balanced\.$/);
+});
+
+test("elephant-ask refuses a depth it does not offer", async () => {
+  const calls = stubCalypso(() => json({}));
+  const client = await connect(ToolPresetRegistry.elephant);
+  let refused = false;
+  try {
+    const result = await client.callTool({
+      name: "elephant-ask",
+      arguments: { prompt: "What is the refund policy?", depth: "exhaustive" },
+    });
+    refused = result.isError === true;
+  } catch {
+    refused = true;
+  }
+  assert.equal(refused, true);
+  assert.equal(calls.length, 0);
+});
+
+test("elephant-search passes depth and extra phrasings to the API", async () => {
+  const calls = stubCalypso(() =>
+    json({
+      object: "search.results",
+      query: "q",
+      strategy: "bucket_stores",
+      depth: "standard",
+      results: [],
+      usage: {},
+    }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const call = (args) =>
+    client.callTool({
+      name: "elephant-search",
+      arguments: { query: "shipping times", ...args },
+    });
+
+  await call({});
+  assert.equal("depth" in calls.at(-1).body, false);
+  assert.equal("additional_queries" in calls.at(-1).body, false);
+
+  await call({ depth: "fast" });
+  assert.equal(calls.at(-1).body.depth, "fast");
+
+  await call({ depth: "thorough" });
+  assert.equal(calls.at(-1).body.depth, "standard");
+
+  // Naming other phrasings asks for the deeper search by itself.
+  await call({
+    alsoSearchFor: ["express delivery times", " international shipping days "],
+  });
+  assert.equal(calls.at(-1).body.depth, "standard");
+  assert.deepEqual(calls.at(-1).body.additional_queries, [
+    "express delivery times",
+    "international shipping days",
+  ]);
+
+  const before = calls.length;
+  let refused = false;
+  try {
+    refused = (await call({ alsoSearchFor: ["a", "b", "c"] })).isError === true;
+  } catch {
+    refused = true;
+  }
+  assert.equal(refused, true);
+  assert.equal(calls.length, before);
+});
+
 test("elephant-search refuses agent and buckets together", async () => {
   const calls = stubCalypso(() => json({}));
   const client = await connect(ToolPresetRegistry.elephant);

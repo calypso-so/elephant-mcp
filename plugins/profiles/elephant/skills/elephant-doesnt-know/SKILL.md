@@ -13,6 +13,13 @@ Elephant answers only from the team's sources. When those sources do not cover a
 - `elephant-search` returns no results, or only passages that do not address the question.
 - The sources found are about a different product, period or team than the user asked about.
 
+## Before you say so
+
+"Not found" is only true after a real attempt. Do these first, once each:
+
+- For `elephant-ask`: ask again one depth higher (`fast` → `balanced` → `deep`), unless the reply says the team's plan capped the depth.
+- For `elephant-search`: search again with `depth: "thorough"` and one or two other phrasings in `alsoSearchFor`.
+
 ## What to say
 
 1. Say plainly that the team's knowledge does not cover the question: "I could not find this in your team's Elephant sources."

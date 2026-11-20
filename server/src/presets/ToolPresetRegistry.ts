@@ -17,6 +17,7 @@ const elephant = new ToolPreset({
   scope: "elephant:read",
   instructions: [
     "Elephant by Calypso answers from this team's Calypso knowledge — the documents, websites and images the team has added — and cites every source.",
+    "Answers and searches have a depth. Start shallow and go one step deeper only when a result is thin or says the knowledge does not cover something the user expects: `depth` on elephant-ask (`fast`, `balanced`, `deep`) and on elephant-search (`fast`, `thorough`, with `alsoSearchFor`).",
     "It is read-only: it cannot add, change or delete knowledge. To add files or websites, use Elephant Builder by Calypso.",
     "When the knowledge does not cover a question, say so instead of answering from general knowledge.",
   ].join(" "),

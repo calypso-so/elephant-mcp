@@ -12,7 +12,18 @@ Use `elephant-search` when the user wants the evidence itself: "where do we ment
 - `query` (required): what to look for, in the user's words.
 - `buckets` (optional): up to 5 bucket ids or slugs to search, when the user names buckets ("only in Product docs"). Find them with `elephant-list-buckets`.
 - `agent` (optional): a specific Elephant agent variant whose sources to search, only when the user names one. Do not pass `agent` and `buckets` together.
-- `maxResults` (optional): 1 to 20, default 10. Raise it when the user wants everything that matches.
+- `maxResults` (optional): 1 to 20, default 10. It is a ceiling, not a target: a search returns as many passages as it finds.
+- `depth` (optional): `fast` (default) runs one search; `thorough` runs several in parallel and merges them.
+- `alsoSearchFor` (optional): up to 2 other ways of saying the same thing, searched alongside `query`. Naming any makes the search thorough.
+
+## Getting enough back
+
+Each result is a short quotation picked from one matching passage, not the whole passage, and a short document is a single passage. One result therefore does not mean the document says only that.
+
+- A fast search that returns one or two lines on a topic the user expects more about is a reason to search again, not a finding. Say nothing about the document being thin until you have.
+- Search again with `depth: "thorough"` and `alsoSearchFor`. Write the extra phrasings as the document would: its own terms, a synonym, or the specific items you expect ("express delivery times", "international shipping days").
+- Narrow to `buckets` when you know where the material lives.
+- When the user wants the content read and summarised, not quoted, use `elephant-ask`: it reads the full passages.
 
 ## Reading the result
 

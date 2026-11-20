@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { SEARCH_DEPTHS } from "../calypso/AnswerDepth.js";
+import { MAX_EXTRA_QUERIES } from "../calypso/KnowledgeSearch.js";
+
 import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
 import {
   ElephantTool,
@@ -29,7 +32,22 @@ const inputSchema = {
     .min(1)
     .max(20)
     .optional()
-    .describe("How many passages to return, 1 to 20 (default 10)."),
+    .describe(
+      "The most passages to return, 1 to 20 (default 10). A ceiling, not a target: a search returns as many passages as it finds.",
+    ),
+  depth: z
+    .enum(SEARCH_DEPTHS)
+    .optional()
+    .describe(
+      "`fast` (default) runs one search. `thorough` runs several in parallel and merges them: use it when a fast search came back with fewer passages than the question deserves, or when you are gathering evidence, not checking one fact.",
+    ),
+  alsoSearchFor: z
+    .array(z.string().min(1))
+    .max(MAX_EXTRA_QUERIES)
+    .optional()
+    .describe(
+      `Up to ${MAX_EXTRA_QUERIES} other ways of saying the same thing, searched alongside \`query\` (this makes the search thorough). Write them as the document would: its own terms, a synonym, the specific item ("express delivery times", "international shipping days"). This is the strongest way to get more of a document back.`,
+    ),
 };
 
 /** `elephant-search`: matching passages and their sources, no answer. */
@@ -40,6 +58,8 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
     "Searches the team's Calypso knowledge and returns the matching passages and their sources, without writing an answer.",
     "",
     "Use it when the user wants the exact wording, quotes, or a list of where something is mentioned.",
+    "Each result is a short quotation chosen from one matching passage, not the whole passage, and a short document is one passage. So one result does not mean the document says only that: it means one passage matched and this is the line picked from it.",
+    'To get more of what is there, search again with `depth: "thorough"` and `alsoSearchFor` (other phrasings, or the specific items you expect), or narrow to `buckets`. To have the full content read and summarised, use elephant-ask instead.',
     "Pass `buckets` (ids or slugs from elephant-list-buckets, up to 5) to search specific buckets, or `agent` to search what one Calypso agent can see — not both.",
   ].join("\n");
   readonly inputSchema = inputSchema;

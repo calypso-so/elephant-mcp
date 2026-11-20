@@ -1,3 +1,4 @@
+import { type SearchDepthName, searchDepthForApi } from "./AnswerDepth.js";
 import type { CalypsoApiClient } from "./CalypsoApiClient.js";
 
 export type KnowledgeSearchResult = {
@@ -16,6 +17,8 @@ export type KnowledgeSearchResponse = {
   query: string;
   agent?: string | null;
   strategy: string;
+  /** The depth the search ran at, as the API names it. */
+  depth?: string;
   results: KnowledgeSearchResult[];
   usage: {
     input_tokens: number;
@@ -32,9 +35,14 @@ export type SearchKnowledgeOptions = {
   /** Bucket ids or slugs to search directly. */
   buckets?: string[];
   maxResults?: number;
+  depth?: SearchDepthName;
+  /** Other phrasings of the same question, searched alongside it. */
+  alsoSearchFor?: string[];
 };
 
 const MAX_RESULTS = 20;
+/** The API searches at most this many extra phrasings. */
+export const MAX_EXTRA_QUERIES = 2;
 
 /**
  * Retrieval without an answer (`POST /search`): the passages and sources an
@@ -48,6 +56,11 @@ export class KnowledgeSearch {
     const buckets = (options.buckets ?? [])
       .map((item) => String(item || "").trim())
       .filter(Boolean);
+    const extra = (options.alsoSearchFor ?? [])
+      .map((item) => String(item || "").trim())
+      .filter(Boolean)
+      .slice(0, MAX_EXTRA_QUERIES);
+    const depth = searchDepthForApi(options.depth, extra.length);
     return this.api.request("/search", {
       method: "POST",
       body: {
@@ -55,6 +68,8 @@ export class KnowledgeSearch {
         ...(agent ? { agent } : {}),
         ...(options.buckets?.length ? { buckets } : {}),
         ...maxResultsField(options.maxResults),
+        ...(depth ? { depth } : {}),
+        ...(extra.length ? { additional_queries: extra } : {}),
       },
     });
   }

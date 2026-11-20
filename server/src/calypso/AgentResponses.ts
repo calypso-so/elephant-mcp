@@ -5,6 +5,7 @@ import type {
   ResponseStreamEvent,
 } from "openai/resources/responses/responses";
 
+import { AnswerDepth } from "./AnswerDepth.js";
 import { AnswerSources } from "./AnswerSources.js";
 import { type CalypsoApiConfig, requireApiKey } from "./CalypsoApiConfig.js";
 
@@ -16,6 +17,8 @@ export type AgentQuestion = {
   readonly fileIds?: readonly string[];
   /** Names the conversation this single turn opens. */
   readonly conversationId: string;
+  /** How much work the answer is worth; the agent's own default when absent. */
+  readonly depth?: AnswerDepth;
 };
 
 export type AgentAnswer = {
@@ -23,6 +26,8 @@ export type AgentAnswer = {
   readonly responseId: string | null;
   /** What the answer was grounded in; empty when the response names none. */
   readonly sources: AnswerSources;
+  /** The depth the API reports it answered at, which a plan may cap. */
+  readonly depth?: AnswerDepth;
 };
 
 /**
@@ -110,6 +115,9 @@ export class AgentResponses {
       tool: "mcp",
       agent: question.agentId,
       conversation_id: question.conversationId,
+      ...(question.depth
+        ? { response_policy: question.depth.responsePolicy }
+        : {}),
       // Named files are retrieved from, not pasted into the prompt whole.
       ...(question.fileIds?.length
         ? { _aicore: { file_input_strategy: "rag_policy" } }
@@ -124,6 +132,7 @@ export class AgentResponses {
     let text = "";
     let responseId: string | null = null;
     let sources = AnswerSources.none();
+    let depth: AnswerDepth | undefined;
 
     for await (const event of stream) {
       if (
@@ -145,9 +154,10 @@ export class AgentResponses {
           responseId = event.response.id;
         }
         sources = AnswerSources.fromResponse(event.response);
+        depth = AnswerDepth.used(event.response);
       }
     }
 
-    return { text, responseId, sources };
+    return { text, responseId, sources, depth };
   }
 }
