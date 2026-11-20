@@ -40,7 +40,7 @@ describe("Cli", () => {
       );
       assert.ok(existsSync(join(outDir, "elephant", "openai", ".codex-plugin", "plugin.json")));
       const sums = readFileSync(join(outDir, "SHA256SUMS.txt"), "utf8");
-      assert.match(sums, /^[0-9a-f]{64} {2}elephant-openai-1\.0\.0\.zip$/m);
+      assert.match(sums, /^[0-9a-f]{64} {2}elephant-openai-1\.0\.1\.zip$/m);
       assert.ok(output.lines.some((line) => line.includes("sha256")));
     }
     assert.deepEqual(hashes[0], hashes[1]);
