@@ -34,7 +34,7 @@ describe("Cli", () => {
       const { cli: tool, output } = cli(outDir);
       assert.equal(await tool.run(["build", "--profile", "all"]), 0, output.errors.join("\n"));
       hashes.push(
-        ["elephant-openai-1.0.0.zip", "elephant-builder-openai-1.0.0.zip"].map((zip) =>
+        ["elephant-openai-1.0.1.zip", "elephant-builder-openai-1.0.1.zip"].map((zip) =>
           Archiver.sha256(readFileSync(join(outDir, zip))),
         ),
       );

@@ -1,7 +1,7 @@
 {
   "extends": "../../shared/plugin.config.json",
   "name": "elephant-builder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Save PDFs, documents, file links and websites into Elephant from ChatGPT, and create buckets to organise them. Ask them questions later with Elephant by Calypso.",
   "onboardingSkill": "elephant-builder-get-started",
   "mcp": {
@@ -163,7 +163,7 @@
     ]
   },
   "publication": {
-    "releaseNotes": "First release: add ChatGPT attachments, file links and websites to your team's Calypso knowledge, and create buckets."
+    "releaseNotes": "First release: save ChatGPT attachments, file links and websites into Elephant, and create buckets to organise them."
   },
   "skillTemplates": [
     {

@@ -9,7 +9,7 @@ The repository holds the profiles (one per package), their skills and assets, an
 | `elephant` | Elephant by Calypso | `elephant-ask`, `elephant-search`, `elephant-list-buckets`, `elephant-open-source` | `https://mcp.calypso.so/elephant/mcp` | First listing (read-only) |
 | `elephant-builder` | Elephant Builder by Calypso | `elephant-add-file`, `elephant-add-files`, `elephant-add-website`, `elephant-create-bucket` | `https://mcp.calypso.so/elephant/builder/mcp` | After `elephant` is approved |
 
-Both packages are at version 1.0.0. `elephant-builder` is built and validated with every change, but it is submitted only once `elephant` is approved in the directory.
+Both packages are at version 1.0.1. `elephant-builder` is built and validated with every change, but it is submitted only once `elephant` is approved in the directory.
 
 ## Commands
 

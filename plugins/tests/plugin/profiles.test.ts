@@ -58,13 +58,13 @@ describe("profiles", () => {
         assert.equal(entry.displayName, expected.displayName);
         assert.equal(entry.listingTitle, expected.listingTitle);
         assert.deepEqual(entry.tools, expected.tools);
-        assert.equal(Fixtures.target.archiveName(profile), `${expected.name}-openai-1.0.0.zip`);
-        assert.equal(SlugTable.archiveName(expected.name, "1.0.0"), Fixtures.target.archiveName(profile));
+        assert.equal(Fixtures.target.archiveName(profile), `${expected.name}-openai-1.0.1.zip`);
+        assert.equal(SlugTable.archiveName(expected.name, "1.0.1"), Fixtures.target.archiveName(profile));
       });
 
       it("emits the manifest in the portal's Codex layout", () => {
         assert.equal(manifest.name, expected.name);
-        assert.equal(manifest.version, "1.0.0");
+        assert.equal(manifest.version, "1.0.1");
         assert.equal(manifest.skills, "./skills/");
         assert.equal(manifest.mcpServers, "./.mcp.json");
         assert.equal(manifest.license, "MIT");

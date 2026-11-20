@@ -1,7 +1,7 @@
 {
   "extends": "../../shared/plugin.config.json",
   "name": "elephant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PDF AI for your own documents. Ask your PDFs, papers, notes, contracts, manuals and web pages a question in ChatGPT and get an answer with the source cited. Search passages, browse your buckets and check a source. Read-only.",
   "onboardingSkill": "elephant-get-started",
   "mcp": {
@@ -164,7 +164,7 @@
     ]
   },
   "publication": {
-    "releaseNotes": "First release: cited answers, passage search, bucket overview and source details over your team's Calypso knowledge. Read-only."
+    "releaseNotes": "First release: cited answers from your PDFs, documents and web pages, passage search, a bucket overview and source details. Read-only."
   },
   "forbiddenPatterns": [
     {
