@@ -2,7 +2,7 @@
   "extends": "../../shared/plugin.config.json",
   "name": "elephant-builder",
   "version": "1.0.0",
-  "description": "Teach Elephant from ChatGPT: add files, links and websites to your team's Calypso knowledge, and create buckets to hold them.",
+  "description": "Save PDFs, documents, file links and websites into Elephant from ChatGPT, and create buckets to organise them. Ask them questions later with Elephant by Calypso.",
   "onboardingSkill": "elephant-builder-get-started",
   "mcp": {
     "serverName": "elephant-builder",
@@ -34,19 +34,19 @@
   "interface": {
     "displayName": "Elephant Builder by Calypso",
     "listingTitle": "Elephant Builder: Save PDFs",
-    "shortDescription": "Add files to your knowledge",
-    "longDescription": "Elephant Builder by Calypso lets you teach Elephant without leaving ChatGPT. Add the files you attach in ChatGPT, public file links and websites to your team's Calypso knowledge, and create buckets to keep them organised. Every addition reports what was added, to which bucket, and whether it has finished indexing, so you can cite exactly what Elephant now knows. Elephant Builder only adds; it never deletes or edits your sources. To ask questions about your knowledge, use Elephant by Calypso.",
+    "shortDescription": "Save PDFs and web pages",
+    "longDescription": "Elephant Builder saves your PDFs, documents and web pages into Elephant from inside ChatGPT, so you can ask them questions later and get answers with the source cited.\n\nAttach a file in ChatGPT, paste a link to a file, or name a website, and say where it goes.\n\nWhat people save:\n\n* Research papers and articles for a literature review\n* Lecture notes, textbooks and slides for study\n* Contracts, leases and policies they need to look things up in\n* User manuals and guides\n* Invoices, receipts and statements\n* Web pages and documentation worth keeping\n\nOrganise as you go: create buckets (folders) such as Research, Study or Home, and add up to 100 files in one request. Every addition reports what was added, to which bucket, and whether it has finished indexing.\n\nElephant Builder only adds: it never deletes or edits your sources. It needs an Elephant account (sign up at elephant.calypso.so). To ask questions about what you saved, use Elephant by Calypso.",
     "capabilities": [
-      "Add ChatGPT attachments to a bucket",
-      "Add public file links",
-      "Add websites as knowledge",
-      "Create buckets",
-      "Batch uploads of up to 100 files"
+      "Save PDFs and documents you attach in ChatGPT",
+      "Save files from a public link",
+      "Save websites as sources",
+      "Create buckets to organise your sources",
+      "Add up to 100 files in one request"
     ],
     "defaultPrompts": [
-      "Add this PDF to our Policies bucket",
-      "Create a bucket called Sales playbooks",
-      "Add our Elephant page to the Website bucket"
+      "Save this PDF to my Research bucket",
+      "Create a bucket called Study notes",
+      "Save this web page to my Reading bucket"
     ]
   },
   "listing": {

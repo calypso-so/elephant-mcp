@@ -2,7 +2,7 @@
   "extends": "../../shared/plugin.config.json",
   "name": "elephant",
   "version": "1.0.0",
-  "description": "Cited answers from your team's Calypso knowledge. Ask questions, search passages, list buckets and look up sources. Read-only.",
+  "description": "PDF AI for your own documents. Ask your PDFs, papers, notes, contracts, manuals and web pages a question in ChatGPT and get an answer with the source cited. Search passages, browse your buckets and check a source. Read-only.",
   "onboardingSkill": "elephant-get-started",
   "mcp": {
     "serverName": "elephant",
@@ -34,19 +34,20 @@
   "interface": {
     "displayName": "Elephant by Calypso",
     "listingTitle": "Elephant: PDF AI & Docs Q&A",
-    "shortDescription": "Cited answers from your docs",
-    "longDescription": "Elephant turns what you have read into a memory ChatGPT can answer from: PDFs, papers, slides, screenshots, images and web pages, with sources cited.\nBuilt for researchers, analysts, students, founders, lawyers, writers and anyone who reads more than they can remember.\nSave your research into Elephant, then ask ChatGPT about it. Answers come back as a cited brief:\n\n* An answer drawn from your own sources\n* The passage and file each answer came from\n* Matching passages, when you search instead of ask\n* The buckets your knowledge is organised into, so you can aim a question\n* Whether a source is indexed and ready, with its name, type and size\n* A plain “your sources do not cover this” when they do not\n\nAsk about a topic and Elephant finds what you saved on it and shows where it came from.\nUnder the hood runs multimodal retrieval-augmented generation (RAG): it searches the text, tables and images in your files, with nothing to configure. To connect, sign in, choose your knowledge and start asking. No key to paste, nothing to install.\nElephant is read-only: it does not edit or delete your knowledge. Requires an Elephant account (sign up at elephant.calypso.so). To save files and websites from inside ChatGPT, use Elephant Builder by Calypso.",
+    "shortDescription": "Ask your PDFs, with sources",
+    "longDescription": "Elephant is PDF AI for everything you have saved. Ask your PDFs, documents, slides, screenshots and web pages a question in ChatGPT and get an answer with the source cited.\n\nSave it once, ask it any time. Elephant searches the text, tables and images in your files and answers only from them.\n\nWhat people use it for:\n\n* Study: ask your lecture notes, textbooks and slides, and get summaries and study notes you can check against the page\n* Research: run a literature review across the research papers you have collected, with the passage behind each claim\n* Contracts and policies: find what your lease, employment contract or insurance policy says about a clause\n* Manuals: ask a user manual how to set something up or fix it, without reading all of it\n* Invoices and receipts: pull totals, dates and line items from the PDFs you keep\n* Books and reports: get a summary of a chapter, then ask follow-up questions\n* Meeting notes and screenshots: find the decision, the number or the name you half remember\n\nEvery answer shows the file and the passage it came from. When your sources do not cover a question, Elephant says so plainly and adds nothing of its own.\n\nIt also searches for exact passages, shows how your sources are organised into buckets (folders), and tells you whether a file has finished indexing.\n\nThink of it as a second brain for your reading: retrieval-augmented generation (RAG) over your own documents, with nothing to configure. Sign in, choose your knowledge and start asking. No key to paste, nothing to install.\n\nElephant is read-only: it never edits or deletes your files. It needs an Elephant account (sign up at elephant.calypso.so). To save files and websites from inside ChatGPT, use Elephant Builder by Calypso.",
     "capabilities": [
-      "Cited answers from your team's knowledge",
-      "Passage search across buckets",
-      "Bucket overview",
-      "Source details and indexing status",
-      "Read-only access"
+      "Cited answers from your PDFs and documents",
+      "Summaries of papers, books, notes and reports",
+      "Passage search across everything you saved",
+      "Reads text, tables, screenshots and web pages",
+      "Says when your sources do not cover a question",
+      "Read-only: never edits or deletes your files"
     ],
     "defaultPrompts": [
-      "What does our knowledge say about our refund policy?",
-      "Search our sources for the onboarding checklist",
-      "Which knowledge buckets does my team have?"
+      "What does my warranty cover, and for how long?",
+      "Summarize the refund policy I saved and cite the source",
+      "Search my documents for shipping times"
     ]
   },
   "listing": {
