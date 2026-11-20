@@ -18,16 +18,16 @@ Use `elephant-search` when the user wants the evidence itself: "where do we ment
 
 ## Getting enough back
 
-Each result is a short quotation picked from one matching passage, not the whole passage, and a short document is a single passage. One result therefore does not mean the document says only that.
+Each result is one whole matching passage, and a short document is a single passage. Read all of a result's `text` before deciding anything is missing: one result can hold everything the document says on the subject.
 
-- A fast search that returns one or two lines on a topic the user expects more about is a reason to search again, not a finding. Say nothing about the document being thin until you have.
+- When the passages returned do not cover what the user expects, that is a reason to search again, not a finding. Say nothing about the knowledge being thin until you have.
 - Search again with `depth: "thorough"` and `alsoSearchFor`. Write the extra phrasings as the document would: its own terms, a synonym, or the specific items you expect ("express delivery times", "international shipping days").
 - Narrow to `buckets` when you know where the material lives.
-- When the user wants the content read and summarised, not quoted, use `elephant-ask`: it reads the full passages.
+- When the user wants the content read and summarised, not quoted, use `elephant-ask`.
 
 ## Reading the result
 
-Each result carries a `source_index`, the passage `text`, a `title`, and where it came from: `filename` and `file_id` for files, `url` for websites. Results are ordered by relevance.
+Each result carries a `source_index`, the whole passage as `text`, sometimes a `quote` (the line in the passage that matched most closely), a `title`, and where it came from: `filename` and `file_id` for files, `url` for websites. Results are ordered by relevance.
 
 ## Cite every passage
 

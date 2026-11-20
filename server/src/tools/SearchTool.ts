@@ -58,8 +58,8 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
     "Searches the team's Calypso knowledge and returns the matching passages and their sources, without writing an answer.",
     "",
     "Use it when the user wants the exact wording, quotes, or a list of where something is mentioned.",
-    "Each result is a short quotation chosen from one matching passage, not the whole passage, and a short document is one passage. So one result does not mean the document says only that: it means one passage matched and this is the line picked from it.",
-    'To get more of what is there, search again with `depth: "thorough"` and `alsoSearchFor` (other phrasings, or the specific items you expect), or narrow to `buckets`. To have the full content read and summarised, use elephant-ask instead.',
+    "Each result's `text` is one whole matching passage as the document has it, and `quote`, when present, is the line in that passage that matched most closely. Read the whole `text` before searching again: a short document is one passage, so a single result can hold everything it says on the subject.",
+    'Quote wording to the user from `text`, never from memory. When the passages returned do not cover what the user expects, search again with `depth: "thorough"` and `alsoSearchFor` (other phrasings, or the specific items you expect), or narrow to `buckets`. To have the content read and summarised, use elephant-ask instead.',
     "Pass `buckets` (ids or slugs from elephant-list-buckets, up to 5) to search specific buckets, or `agent` to search what one Calypso agent can see — not both.",
   ].join("\n");
   readonly inputSchema = inputSchema;

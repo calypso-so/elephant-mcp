@@ -5,7 +5,10 @@ export type KnowledgeSearchResult = {
   source_index: number;
   type: string;
   title?: string | null;
+  /** The whole matching passage, as the document has it. */
   text?: string | null;
+  /** The line in the passage that matched most closely, when one stood out. */
+  quote?: string | null;
   file_id?: string | null;
   filename?: string | null;
   url?: string | null;
