@@ -241,6 +241,147 @@ test("elephant-ask streams one stateless question to the default agent", async (
   assert.equal(body.input[0].content[0].text, "What is the refund policy?");
 });
 
+async function askWith(completed) {
+  const sse = [
+    { type: "response.output_text.delta", delta: "Returns within 30 days." },
+    { type: "response.completed", response: { id: "resp_2", ...completed } },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
+  stubCalypso(
+    () =>
+      new Response(sse, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  return text(
+    await client.callTool({
+      name: "elephant-ask",
+      arguments: { prompt: "What is the refund policy?" },
+    }),
+  );
+}
+
+test("elephant-ask lists the sources the API reports beside the answer", async () => {
+  const answer = await askWith({
+    metadata: {
+      _aicore: {
+        grounded_sources: [
+          {
+            filename: "Refund-Policy.pdf",
+            knowledge_id: "kb_refund",
+            page_number: 1,
+          },
+          // The same file and page cited again is one line, not two.
+          {
+            filename: "Refund-Policy.pdf",
+            knowledge_id: "kb_refund",
+            page_number: 1,
+          },
+          {
+            filename: "Shipping-Policy.pdf",
+            knowledge_id: "kb_ship",
+            page_label: "p. 2",
+          },
+          { title: "Returns", url: "https://example.test/returns" },
+          { quote: "no name, no url: not a source a reader can follow" },
+        ],
+      },
+    },
+  });
+  assert.equal(
+    answer,
+    [
+      "Returns within 30 days.",
+      "",
+      "Sources:",
+      "1. Refund-Policy.pdf (p. 1, file id kb_refund)",
+      "2. Shipping-Policy.pdf (p. 2, file id kb_ship)",
+      "3. Returns (https://example.test/returns)",
+    ].join("\n"),
+  );
+});
+
+test("elephant-ask falls back to the output annotations for its sources", async () => {
+  const answer = await askWith({
+    output: [
+      {
+        type: "message",
+        content: [
+          {
+            type: "output_text",
+            annotations: [
+              {
+                type: "file_citation",
+                file_id: "kb_warranty",
+                filename: "Warranty-Terms.pdf",
+              },
+              {
+                type: "url_citation",
+                url: "https://example.test/a",
+                title: "A page",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+  assert.equal(
+    answer,
+    [
+      "Returns within 30 days.",
+      "",
+      "Sources:",
+      "1. Warranty-Terms.pdf (file id kb_warranty)",
+      "2. A page (https://example.test/a)",
+    ].join("\n"),
+  );
+});
+
+test("elephant-ask does not list sources twice when the answer already does", async () => {
+  const body = "Returns within 30 days.\n\nSources:\n1. Refund-Policy.pdf";
+  const sse = [
+    { type: "response.output_text.delta", delta: body },
+    {
+      type: "response.completed",
+      response: {
+        id: "resp_3",
+        metadata: {
+          _aicore: { grounded_sources: [{ filename: "Refund-Policy.pdf" }] },
+        },
+      },
+    },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
+  stubCalypso(
+    () =>
+      new Response(sse, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "What is the refund policy?" },
+  });
+  assert.equal(text(result), body);
+});
+
+test("elephant-ask adds nothing when the API reports no sources", async () => {
+  for (const completed of [
+    {},
+    { metadata: { _aicore: { grounded_sources: [] } }, output: [] },
+    { metadata: null, output: "unexpected" },
+  ]) {
+    assert.equal(await askWith(completed), "Returns within 30 days.");
+  }
+});
+
 test("elephant-ask refuses an agent the team does not have, naming the ones it has", async () => {
   const calls = stubCalypso(() => json({}));
   const client = await connect(ToolPresetRegistry.elephant);

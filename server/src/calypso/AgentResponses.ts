@@ -5,6 +5,7 @@ import type {
   ResponseStreamEvent,
 } from "openai/resources/responses/responses";
 
+import { AnswerSources } from "./AnswerSources.js";
 import { type CalypsoApiConfig, requireApiKey } from "./CalypsoApiConfig.js";
 
 export type AgentQuestion = {
@@ -20,6 +21,8 @@ export type AgentQuestion = {
 export type AgentAnswer = {
   readonly text: string;
   readonly responseId: string | null;
+  /** What the answer was grounded in; empty when the response names none. */
+  readonly sources: AnswerSources;
 };
 
 /**
@@ -114,12 +117,13 @@ export class AgentResponses {
     };
   }
 
-  /** Folds the event stream into the answer text and the response id. */
+  /** Folds the event stream into the answer text, its sources and the response id. */
   private static async collect(
     stream: AsyncIterable<ResponseStreamEvent>,
   ): Promise<AgentAnswer> {
     let text = "";
     let responseId: string | null = null;
+    let sources = AnswerSources.none();
 
     for await (const event of stream) {
       if (
@@ -136,14 +140,14 @@ export class AgentResponses {
       ) {
         text = event.text;
       }
-      if (
-        event.type === "response.completed" &&
-        typeof event.response?.id === "string"
-      ) {
-        responseId = event.response.id;
+      if (event.type === "response.completed") {
+        if (typeof event.response?.id === "string") {
+          responseId = event.response.id;
+        }
+        sources = AnswerSources.fromResponse(event.response);
       }
     }
 
-    return { text, responseId };
+    return { text, responseId, sources };
   }
 }

@@ -87,7 +87,20 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
       agent: agentId,
       responseId: answer.responseId,
       textLength: answer.text.length,
+      sourceCount: answer.sources.count,
     });
-    return { text: answer.text };
+    // The API reports sources beside the text, not in it. Without this block
+    // a correct, grounded answer reaches the client looking uncited.
+    const sources = AskTool.namesItsSources(answer.text)
+      ? ""
+      : answer.sources.render();
+    return { text: sources ? `${answer.text}\n\n${sources}` : answer.text };
+  }
+
+  /** Whether the answer text already ends in its own list of sources. */
+  private static namesItsSources(text: string): boolean {
+    return /(^|\n)\s*(\*\*)?(sources|references|fuentes|referencias)(\*\*)?:\s*\n/i.test(
+      text,
+    );
   }
 }
