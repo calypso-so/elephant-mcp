@@ -35,7 +35,8 @@ export class NamingRule implements Rule {
     const ui = (manifest.interface ?? {}) as Record<string, unknown>;
 
     NamingRule.expect(out, manifest.name, entry.package, "manifest name", manifestPath);
-    NamingRule.expect(out, ui.displayName, entry.displayName, "interface.displayName", manifestPath);
+    NamingRule.expect(out, ui.displayName, entry.listingTitle, "interface.displayName (listing title)", manifestPath);
+    NamingRule.expect(out, profile.displayName, entry.displayName, "interface.displayName (product name)", "plugin.config.json");
     NamingRule.expect(out, manifest.author?.name, SlugTable.AUTHOR, "author.name", manifestPath);
     NamingRule.expect(out, ui.developerName, SlugTable.AUTHOR, "interface.developerName", manifestPath);
     NamingRule.expect(out, ui.websiteURL, SlugTable.WEBSITE, "interface.websiteURL", manifestPath);

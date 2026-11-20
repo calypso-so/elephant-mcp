@@ -70,7 +70,7 @@ export class ManifestBuilder {
       skills: ManifestBuilder.SKILLS_PATH,
       mcpServers: ManifestBuilder.MCP_SERVERS_PATH,
       interface: {
-        displayName: ui.displayName,
+        displayName: ui.listingTitle ?? ui.displayName,
         shortDescription: ui.shortDescription,
         longDescription: ui.longDescription,
         developerName: ui.developerName,

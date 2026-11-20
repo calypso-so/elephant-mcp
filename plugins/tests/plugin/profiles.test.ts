@@ -9,6 +9,7 @@ const PROFILES = [
   {
     name: "elephant",
     displayName: "Elephant by Calypso",
+    listingTitle: "Elephant: PDF AI & Docs Q&A",
     serverName: "elephant",
     url: "https://mcp.calypso.so/elephant/mcp",
     tools: ["elephant-ask", "elephant-search", "elephant-list-buckets", "elephant-open-source"],
@@ -26,6 +27,7 @@ const PROFILES = [
   {
     name: "elephant-builder",
     displayName: "Elephant Builder by Calypso",
+    listingTitle: "Elephant Builder: Save PDFs",
     serverName: "elephant-builder",
     url: "https://mcp.calypso.so/elephant/builder/mcp",
     tools: ["elephant-add-file", "elephant-add-files", "elephant-add-website", "elephant-create-bucket"],
@@ -54,6 +56,7 @@ describe("profiles", () => {
         const entry = SlugTable.find(expected.name);
         assert.ok(entry);
         assert.equal(entry.displayName, expected.displayName);
+        assert.equal(entry.listingTitle, expected.listingTitle);
         assert.deepEqual(entry.tools, expected.tools);
         assert.equal(Fixtures.target.archiveName(profile), `${expected.name}-openai-1.0.0.zip`);
         assert.equal(SlugTable.archiveName(expected.name, "1.0.0"), Fixtures.target.archiveName(profile));
@@ -66,7 +69,10 @@ describe("profiles", () => {
         assert.equal(manifest.mcpServers, "./.mcp.json");
         assert.equal(manifest.license, "MIT");
         assert.equal(manifest.author.name, "Calypso");
-        assert.equal(manifest.interface.displayName, expected.displayName);
+        // The directory title leads with the product name and says what it does.
+        assert.equal(manifest.interface.displayName, expected.listingTitle);
+        assert.ok(manifest.interface.displayName.startsWith(expected.displayName.replace(/ by Calypso$/, "")));
+        assert.equal(profile.displayName, expected.displayName);
         assert.ok(manifest.interface.displayName.length <= 30);
         assert.ok(manifest.interface.shortDescription.length <= 30);
         assert.equal(manifest.interface.websiteURL, "https://www.calypso.so/elephant");

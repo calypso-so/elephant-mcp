@@ -35,7 +35,14 @@ export interface McpConfig {
 }
 
 export interface InterfaceConfig {
+  /** The product name, used in prose, skills and routing. */
   readonly displayName: string;
+  /**
+   * The title shown in the directory listing (manifest `interface.displayName`).
+   * It leads with the product name and then says what the plugin does, in the
+   * words people search for. Absent, the product name is the title.
+   */
+  readonly listingTitle?: string;
   readonly shortDescription: string;
   readonly longDescription: string;
   readonly developerName: string;

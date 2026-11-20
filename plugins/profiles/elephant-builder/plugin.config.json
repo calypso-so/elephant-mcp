@@ -33,6 +33,7 @@
   },
   "interface": {
     "displayName": "Elephant Builder by Calypso",
+    "listingTitle": "Elephant Builder: Save PDFs",
     "shortDescription": "Add files to your knowledge",
     "longDescription": "Elephant Builder by Calypso lets you teach Elephant without leaving ChatGPT. Add the files you attach in ChatGPT, public file links and websites to your team's Calypso knowledge, and create buckets to keep them organised. Every addition reports what was added, to which bucket, and whether it has finished indexing, so you can cite exactly what Elephant now knows. Elephant Builder only adds; it never deletes or edits your sources. To ask questions about your knowledge, use Elephant by Calypso.",
     "capabilities": [

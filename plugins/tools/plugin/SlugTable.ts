@@ -1,6 +1,9 @@
 export interface SlugEntry {
   readonly package: string;
+  /** The product name, as written in prose. */
   readonly displayName: string;
+  /** The directory listing title; at most 30 characters. */
+  readonly listingTitle: string;
   readonly serverName: string;
   readonly endpoint: string;
   readonly scope: string;
@@ -21,6 +24,7 @@ export class SlugTable {
     {
       package: "elephant",
       displayName: "Elephant by Calypso",
+      listingTitle: "Elephant: PDF AI & Docs Q&A",
       serverName: "elephant",
       endpoint: "https://mcp.calypso.so/elephant/mcp",
       scope: "elephant:read",
@@ -29,6 +33,7 @@ export class SlugTable {
     {
       package: "elephant-builder",
       displayName: "Elephant Builder by Calypso",
+      listingTitle: "Elephant Builder: Save PDFs",
       serverName: "elephant-builder",
       endpoint: "https://mcp.calypso.so/elephant/builder/mcp",
       scope: "elephant:write",
