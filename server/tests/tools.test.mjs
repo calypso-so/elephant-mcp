@@ -139,10 +139,15 @@ test("each consent adds its own tools and its own instructions", async () => {
     /This connection cannot/,
   );
   assert.match(everything.getInstructions() ?? "", /Elephant never deletes/);
-  // Nothing in this release deletes: no tool may claim to be destructive,
-  // and only the reading tools may claim to be read-only.
+  // Nothing in this release deletes. Only a rename is destructive, because it
+  // overwrites the bucket's name and description; only the reading tools may
+  // claim to be read-only.
   for (const tool of tools) {
-    assert.equal(tool.annotations?.destructiveHint, false, tool.name);
+    assert.equal(
+      tool.annotations?.destructiveHint,
+      tool.name === "elephant-rename-bucket",
+      tool.name,
+    );
     assert.equal(
       tool.annotations?.readOnlyHint,
       READ_TOOLS.includes(tool.name),

@@ -43,7 +43,8 @@ export class RenameBucketTool extends ElephantTool<typeof inputSchema> {
   readonly group = ToolGroup.organise;
   readonly annotations = {
     readOnlyHint: false,
-    destructiveHint: false,
+    // A rename overwrites the bucket's name and description.
+    destructiveHint: true,
     idempotentHint: true,
     openWorldHint: false,
   };
