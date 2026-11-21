@@ -95,6 +95,9 @@ test("a caller who only allowed reading sees the four reading tools", async () =
   assert.match(instructions, /cannot add files, websites or buckets/);
   assert.match(instructions, /rename buckets or move sources/);
   assert.match(instructions, /reconnect Elephant and allow it/);
+  // A request to delete is answered without a tool call, for every caller.
+  assert.match(instructions, /Elephant never deletes/);
+  assert.match(instructions, /do not call any tool, not even to look for it/);
   assert.doesNotMatch(instructions, /It can save files/);
   // A tool the caller was not offered does not exist for them.
   const refused = await client
@@ -131,7 +134,11 @@ test("each consent adds its own tools and its own instructions", async () => {
     tools.map((tool) => tool.name),
     [...READ_TOOLS, ...ADD_TOOLS, ...ORGANISE_TOOLS],
   );
-  assert.doesNotMatch(everything.getInstructions() ?? "", /cannot/);
+  assert.doesNotMatch(
+    everything.getInstructions() ?? "",
+    /This connection cannot/,
+  );
+  assert.match(everything.getInstructions() ?? "", /Elephant never deletes/);
   // Nothing in this release deletes: no tool may claim to be destructive,
   // and only the reading tools may claim to be read-only.
   for (const tool of tools) {

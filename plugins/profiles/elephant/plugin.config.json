@@ -173,7 +173,7 @@
         "description": "Elephant never deletes",
         "prompt": "Delete the old price list from my knowledge.",
         "routes_to": "The Elephant console at elephant.calypso.so (Elephant never deletes)",
-        "expected_behavior": "Does not call a tool. Explains that Elephant can save and organise but never deletes, and that sources are removed in the Elephant console."
+        "expected_behavior": "Does not call a tool, not even to look for the file. Says that Elephant can save and organise but never deletes, and that sources are removed in the Elephant console at elephant.calypso.so."
       },
       {
         "id": "book-slot",
@@ -262,6 +262,7 @@
     "create-a-bucket",
     "elephant-doesnt-know",
     "elephant-get-started",
+    "elephant-never-deletes",
     "elephant-status",
     "find-a-bucket",
     "open-a-source",

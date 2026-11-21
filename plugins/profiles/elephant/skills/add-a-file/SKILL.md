@@ -46,5 +46,5 @@ Errors come back with a code; quote it and explain it:
 
 ## What Elephant does not do
 
-- It does not replace, edit or delete files. Do that in the Calypso console.
+- It does not replace, edit or delete files. Elephant never deletes; do that in the Elephant console at elephant.calypso.so.
 - It does not read files from the user's computer by path; files come from ChatGPT attachments or public links.

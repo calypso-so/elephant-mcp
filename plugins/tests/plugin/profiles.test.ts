@@ -32,6 +32,7 @@ const PROFILES = [
       "create-a-bucket",
       "elephant-doesnt-know",
       "elephant-get-started",
+      "elephant-never-deletes",
       "elephant-status",
       "find-a-bucket",
       "open-a-source",

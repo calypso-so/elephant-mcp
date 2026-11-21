@@ -24,4 +24,4 @@ Calypso reads the page, writes a title, summary and tags, saves it as knowledge 
 ## What Elephant does not do
 
 - It does not crawl a whole site. Each call adds one page; add pages one by one.
-- It does not remove or refresh a page. Do that in the Calypso console.
+- It does not remove or refresh a page. Elephant never deletes; do that in the Elephant console at elephant.calypso.so.
