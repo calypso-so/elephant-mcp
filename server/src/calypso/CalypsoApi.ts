@@ -1,4 +1,5 @@
 import { AgentResponses } from "./AgentResponses.js";
+import { BucketEdits } from "./BucketEdits.js";
 import { BucketSources } from "./BucketSources.js";
 import { CalypsoApiClient } from "./CalypsoApiClient.js";
 import type { CalypsoApiConfig } from "./CalypsoApiConfig.js";
@@ -19,6 +20,7 @@ export class CalypsoApi {
   readonly agent: AgentResponses;
   readonly batches: KnowledgeBatches;
   readonly buckets: KnowledgeBuckets;
+  readonly bucketEdits: BucketEdits;
   readonly bucketSources: BucketSources;
   readonly files: KnowledgeFiles;
   readonly search: KnowledgeSearch;
@@ -30,6 +32,7 @@ export class CalypsoApi {
     this.agent = new AgentResponses(config, userAgent);
     this.batches = new KnowledgeBatches(client);
     this.buckets = new KnowledgeBuckets(client);
+    this.bucketEdits = new BucketEdits(client);
     this.bucketSources = new BucketSources(client);
     this.files = new KnowledgeFiles(client);
     this.search = new KnowledgeSearch(client);

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { countBucketTargets } from "../calypso/BucketDestination.js";
 import type { UploadKnowledgeFileParams } from "../calypso/KnowledgeFiles.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -80,6 +81,7 @@ export class AddFileTool extends ElephantTool<typeof inputSchema> {
     "Pass `waitForIndexing: true` when the user wants to ask about the file right away.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.add;
   readonly fileParams = ["file"] as const;
   readonly annotations = {
     readOnlyHint: false,

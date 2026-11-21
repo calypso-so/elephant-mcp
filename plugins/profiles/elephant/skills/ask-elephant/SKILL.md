@@ -48,6 +48,6 @@ User: "What does our refund policy say about digital products?"
 
 ## What Elephant does not do
 
-- It does not add, edit or delete sources. Adding files and websites is Elephant Builder by Calypso.
+- It does not add, edit or delete sources. To save a file or a web page, use `elephant-add-file` or `elephant-add-website`. Elephant never deletes.
 - It does not answer from the open web or general knowledge; it answers from the team's sources only.
 - It does not book meetings, send messages or run other Calypso products.

@@ -25,7 +25,7 @@ Elephant answers only from the team's sources. When those sources do not cover a
 1. Say plainly that the team's knowledge does not cover the question: "I could not find this in your team's Elephant sources."
 2. Say what you searched: the question, and the buckets if you searched specific ones.
 3. If partial matches exist, offer them clearly labelled as partial, each with its citation (file name or URL).
-4. Suggest a next step: rephrase the question, search a different bucket (`elephant-list-buckets` shows them), or add the missing material with Elephant Builder by Calypso.
+4. Suggest a next step: rephrase the question, search a different bucket (`elephant-list-buckets` shows them), or save the missing material with `elephant-add-file` or `elephant-add-website`.
 
 ## Rules
 
@@ -36,4 +36,4 @@ Elephant answers only from the team's sources. When those sources do not cover a
 ## What Elephant does not do
 
 - It does not search the open web to fill gaps.
-- It does not add the missing material itself. Adding sources is Elephant Builder by Calypso.
+- It does not invent the missing material. When the user has the document, offer to save it with `elephant-add-file` or `elephant-add-website`.

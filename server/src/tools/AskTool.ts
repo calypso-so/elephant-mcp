@@ -4,6 +4,7 @@ import { AgentResponses } from "../calypso/AgentResponses.js";
 import { ANSWER_DEPTHS, AnswerDepth } from "../calypso/AnswerDepth.js";
 import { compactStrings } from "../calypso/coerce.js";
 import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -61,6 +62,7 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     "When the team has no knowledge yet, the answer says so and how to add a first source; relay it, do not answer from general knowledge.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.read;
   readonly annotations = {
     readOnlyHint: true,
     destructiveHint: false,

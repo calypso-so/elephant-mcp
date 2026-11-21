@@ -1,8 +1,8 @@
 {
   "extends": "../../shared/plugin.config.json",
   "name": "elephant",
-  "version": "1.0.1",
-  "description": "PDF AI for your own documents. Ask your PDFs, papers, notes, contracts, manuals and web pages a question in ChatGPT and get an answer with the source cited. Search passages, browse your buckets and check a source. Read-only.",
+  "version": "2.0.0",
+  "description": "PDF AI for your own documents. Save PDFs, notes, contracts, manuals and web pages, then ask them a question in ChatGPT and get an answer with the source cited. Search passages, organise your buckets and check a source. It never deletes.",
   "onboardingSkill": "elephant-get-started",
   "mcp": {
     "serverName": "elephant",
@@ -28,6 +28,36 @@
         "name": "elephant-open-source",
         "title": "Open a source",
         "summary": "shows one source's details: file name, type, size and whether it is indexed."
+      },
+      {
+        "name": "elephant-add-file",
+        "title": "Add a file",
+        "summary": "adds one file (a ChatGPT attachment or a public file link) to a bucket and queues it for indexing."
+      },
+      {
+        "name": "elephant-add-files",
+        "title": "Add files",
+        "summary": "adds 1 to 100 files to buckets in one request and reports how the batch went."
+      },
+      {
+        "name": "elephant-add-website",
+        "title": "Add a website",
+        "summary": "reads a web page, summarises and tags it, and adds it to a bucket."
+      },
+      {
+        "name": "elephant-create-bucket",
+        "title": "Create a bucket",
+        "summary": "creates an empty bucket (a folder of sources) to add files and websites to."
+      },
+      {
+        "name": "elephant-rename-bucket",
+        "title": "Rename a bucket",
+        "summary": "changes a bucket's name or description, leaving the sources in it as they are."
+      },
+      {
+        "name": "elephant-move-sources",
+        "title": "Move sources",
+        "summary": "moves sources from one bucket to another without deleting or re-uploading them."
       }
     ]
   },
@@ -35,18 +65,18 @@
     "displayName": "Elephant by Calypso",
     "listingTitle": "Elephant: PDF AI & Docs Q&A",
     "shortDescription": "Ask your PDFs, with sources",
-    "longDescription": "Elephant is PDF AI for everything you have saved. Ask your PDFs, documents, slides, screenshots and web pages a question in ChatGPT and get an answer with the source cited.\n\nSave it once, ask it any time. Elephant searches the text, tables and images in your files and answers only from them.\n\nWhat people use it for:\n\n* Study: ask your lecture notes, textbooks and slides, and get summaries and study notes you can check against the page\n* Research: run a literature review across the research papers you have collected, with the passage behind each claim\n* Contracts and policies: find what your lease, employment contract or insurance policy says about a clause\n* Manuals: ask a user manual how to set something up or fix it, without reading all of it\n* Invoices and receipts: pull totals, dates and line items from the PDFs you keep\n* Books and reports: get a summary of a chapter, then ask follow-up questions\n* Meeting notes and screenshots: find the decision, the number or the name you half remember\n\nEvery answer shows the file and the passage it came from. When your sources do not cover a question, Elephant says so plainly and adds nothing of its own.\n\nIt also searches for exact passages, shows how your sources are organised into buckets (folders), and tells you whether a file has finished indexing.\n\nThink of it as a second brain for your reading: retrieval-augmented generation (RAG) over your own documents, with nothing to configure. Sign in, choose your knowledge and start asking. No key to paste, nothing to install.\n\nElephant is read-only: it never edits or deletes your files. It needs an Elephant account (sign up at elephant.calypso.so). To save files and websites from inside ChatGPT, use Elephant Builder by Calypso.",
+    "longDescription": "Elephant is PDF AI for everything you have saved. Ask your PDFs, documents, slides, screenshots and web pages a question in ChatGPT and get an answer with the source cited.\n\nSave it once, ask it any time. Elephant searches the text, tables and images in your files and answers only from them.\n\nWhat people use it for:\n\n* Study: ask your lecture notes, textbooks and slides, and get summaries and study notes you can check against the page\n* Research: run a literature review across the research papers you have collected, with the passage behind each claim\n* Contracts and policies: find what your lease, employment contract or insurance policy says about a clause\n* Manuals: ask a user manual how to set something up or fix it, without reading all of it\n* Invoices and receipts: pull totals, dates and line items from the PDFs you keep\n* Books and reports: get a summary of a chapter, then ask follow-up questions\n* Meeting notes and screenshots: find the decision, the number or the name you half remember\n\nEvery answer shows the file and the passage it came from. When your sources do not cover a question, Elephant says so plainly and adds nothing of its own.\n\nIt also searches for exact passages, shows how your sources are organised into buckets (folders), and tells you whether a file has finished indexing.\n\nSave from the chat too: attach a PDF, paste a link to a file or name a web page, and say which bucket it goes in. Create buckets, rename them and move sources between them as your library grows.\n\nThink of it as a second brain for your reading: retrieval-augmented generation (RAG) over your own documents, with nothing to configure. No key to paste, nothing to install.\n\nYou choose what Elephant may do when you connect: read only, or also save and organise. It never deletes your files. It needs an Elephant account (sign up at elephant.calypso.so).",
     "capabilities": [
       "Cited answers from your PDFs and documents",
       "Summaries of papers, books, notes and reports",
       "Passage search across everything you saved",
-      "Reads text, tables, screenshots and web pages",
-      "Says when your sources do not cover a question",
-      "Read-only: never edits or deletes your files"
+      "Save PDFs, links and web pages from the chat",
+      "Organise your sources into buckets you name",
+      "Never deletes: you choose what it may change"
     ],
     "defaultPrompts": [
       "What does my warranty cover, and for how long?",
-      "Summarize the refund policy I saved and cite the source",
+      "Save this PDF to my Research bucket",
       "Search my documents for shipping times"
     ]
   },
@@ -64,24 +94,24 @@
         "expect": "elephant-search; passages listed with their sources"
       },
       {
-        "id": "list-buckets",
-        "prompt": "Which Elephant buckets does my team have?",
-        "expect": "elephant-list-buckets; buckets listed by name with source counts"
-      },
-      {
         "id": "open-source",
         "prompt": "Pick one source from our Product docs bucket and tell me its file name, type and whether it is fully indexed.",
         "expect": "elephant-open-source; file details and indexing status"
       },
       {
-        "id": "ask-follow-up",
-        "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.",
-        "expect": "elephant-ask twice in one thread; both answers cited"
+        "id": "add-attachment",
+        "prompt": "Add the attached PDF to our Policies bucket.",
+        "expect": "elephant-add-file; confirms file name, bucket and indexing status"
       },
       {
-        "id": "add-file",
-        "prompt": "Add this PDF to my Elephant knowledge.",
-        "expect": "no tool call; explains Elephant is read-only and points to Elephant Builder by Calypso"
+        "id": "move-source",
+        "prompt": "Move the shipping policy from our Policies bucket to the Product docs bucket.",
+        "expect": "elephant-list-buckets then elephant-move-sources; reports the outcome by source name"
+      },
+      {
+        "id": "delete-source",
+        "prompt": "Delete the old price list from my knowledge.",
+        "expect": "no tool call; Elephant never deletes, points to the Elephant console"
       },
       {
         "id": "book-slot",
@@ -114,14 +144,6 @@
         "expected_behavior": "Calls elephant-search and lists the matching passages, each with the file name or URL it came from, without inventing an answer."
       },
       {
-        "id": "list-buckets",
-        "kind": "positive",
-        "description": "List the team's buckets",
-        "prompt": "Which Elephant buckets does my team have?",
-        "expected_tool": "elephant-list-buckets",
-        "expected_behavior": "Calls elephant-list-buckets and lists the team's buckets by name with how many sources each holds."
-      },
-      {
         "id": "open-source",
         "kind": "positive",
         "description": "Open one source's details",
@@ -130,20 +152,28 @@
         "expected_behavior": "Finds a source id with elephant-list-buckets, then calls elephant-open-source and reports the file name, type and indexing status."
       },
       {
-        "id": "ask-follow-up",
+        "id": "add-attachment",
         "kind": "positive",
-        "description": "Two cited answers in one thread",
-        "prompt": "Ask Elephant how long the warranty lasts, then ask what it covers.",
-        "expected_tool": "elephant-ask",
-        "expected_behavior": "Calls elephant-ask for the first question and again for the follow-up, restating the subject (the warranty) in the second prompt; both answers cite their sources."
+        "description": "Save a ChatGPT attachment to a bucket",
+        "prompt": "Add the attached PDF to our Policies bucket.",
+        "expected_tool": "elephant-add-file",
+        "expected_behavior": "Calls elephant-add-file with the attachment and the Policies bucket, then confirms the file name, the bucket and the indexing status."
       },
       {
-        "id": "add-file",
+        "id": "move-source",
+        "kind": "positive",
+        "description": "Move a source to another bucket",
+        "prompt": "Move the shipping policy from our Policies bucket to the Product docs bucket.",
+        "expected_tool": "elephant-move-sources",
+        "expected_behavior": "Finds the source and both buckets with elephant-list-buckets, calls elephant-move-sources, then reports what happened to the source by name. Nothing is deleted."
+      },
+      {
+        "id": "delete-source",
         "kind": "negative",
-        "description": "Adding a file belongs to Elephant Builder",
-        "prompt": "Add this PDF to my Elephant knowledge.",
-        "routes_to": "Elephant Builder by Calypso",
-        "expected_behavior": "Does not call a tool. Explains that Elephant is read-only and that Elephant Builder by Calypso adds files and websites."
+        "description": "Elephant never deletes",
+        "prompt": "Delete the old price list from my knowledge.",
+        "routes_to": "The Elephant console at elephant.calypso.so (Elephant never deletes)",
+        "expected_behavior": "Does not call a tool. Explains that Elephant can save and organise but never deletes, and that sources are removed in the Elephant console."
       },
       {
         "id": "book-slot",
@@ -164,13 +194,13 @@
     ]
   },
   "publication": {
-    "releaseNotes": "First release: cited answers from your PDFs, documents and web pages, passage search, a bucket overview and source details. Read-only."
+    "releaseNotes": "2.0: one plugin for everything. Save PDFs, file links and web pages, create and rename buckets and move sources between them, alongside cited answers and passage search. You choose what it may do when you connect. It never deletes."
   },
   "forbiddenPatterns": [
     {
-      "pattern": "\\b(I|Elephant) (added|uploaded|saved|stored|deleted) (it|this|the file|your file|the website)\\b",
+      "pattern": "\\b(I|Elephant) (deleted|removed|erased) (it|this|the file|your file|the website|the bucket)\\b",
       "flags": "i",
-      "reason": "Elephant is read-only"
+      "reason": "Elephant never deletes"
     }
   ],
   "skillTemplates": [
@@ -178,26 +208,26 @@
       "template": "get-started",
       "as": "elephant-get-started",
       "vars": {
-        "description": "Start here when the user first connects Elephant by Calypso or asks what Elephant can do. Explains the read-only tools, how answers are cited, and what to ask first.",
-        "whatItIs": "Elephant is your team's Calypso knowledge inside ChatGPT. Your team adds files and websites to Calypso and groups them into buckets (a bucket is a folder of sources Elephant remembers). Elephant answers from those sources only, and every answer says which source each claim came from. Elephant is read-only: it reads your team's knowledge and never changes it.",
+        "description": "Start here when the user first connects Elephant by Calypso or asks what Elephant can do. Explains asking, saving and organising, how answers are cited, and what to try first.",
+        "whatItIs": "Elephant is your own knowledge inside ChatGPT. You save files and web pages into buckets (a bucket is a folder of sources Elephant remembers), and Elephant answers from those sources only, saying which source each claim came from. When connecting, the user chose what Elephant may do: read only, or also save and organise. Elephant never deletes a source.",
         "firstSteps": [
-          "Ask a question about your team's own material, for example a policy, a product detail or a process. Elephant answers with `elephant-ask` and cites its sources.",
+          "Ask a question about your own material, for example a policy, a product detail or a paper. Elephant answers with `elephant-ask` and cites its sources.",
           "To see the evidence instead of an answer, search with `elephant-search`.",
           "To see what Elephant knows, list the buckets with `elephant-list-buckets`.",
-          "To check one source's details or whether it finished indexing, use `elephant-open-source`."
+          "To save something, attach a file or give a link and name the bucket: `elephant-add-file`, or `elephant-add-website` for a web page."
         ],
         "examplePrompts": [
           "What does our knowledge say about the refund policy?",
-          "Search our sources for the onboarding checklist.",
-          "Which buckets does my team have, and how many sources are in each?",
-          "Is the latest price list fully indexed?"
+          "Save this PDF to my Research bucket.",
+          "Which buckets do I have, and what is in each?",
+          "Move the shipping policy to the Product docs bucket."
         ],
         "citationRule": "Cite every claim. After each fact, name the source it came from: the file name, or the URL for a website. If the sources do not cover the question, say so plainly and do not fill the gap from general knowledge. See the `elephant-doesnt-know` skill for how to word that.",
         "notThisPlugin": [
-          "Adding files, websites or buckets. Elephant is read-only; that is Elephant Builder by Calypso.",
-          "Deleting or editing sources. Manage sources in the Calypso console.",
-          "Answering general questions about the world. Elephant answers only from your team's sources.",
-          "Booking, messaging customers or other Calypso products. Elephant covers knowledge only."
+          "Deleting or editing sources. Elephant never deletes; remove sources in the Elephant console.",
+          "Answering general questions about the world. Elephant answers only from your sources.",
+          "Booking, messaging customers or other Calypso products. Elephant covers knowledge only.",
+          "Anything the user did not allow when connecting. If saving or organising tools are missing, they reconnect Elephant and allow them."
         ]
       }
     },
@@ -214,23 +244,28 @@
         "reportFormat": "Say that Elephant is connected, then list the buckets by name with the number of sources in each. Cite the tool result as the source of the status (\"according to Elephant's bucket list\"). Do not show raw ids unless the user asks for them.",
         "troubleshooting": [
           "An authorization error means the ChatGPT connection to Calypso expired or was removed. Ask the user to reconnect Elephant from ChatGPT's settings and sign in to Calypso again.",
-          "An empty bucket list means the team has not added knowledge yet. Explain that sources are added in Calypso or with Elephant Builder by Calypso.",
-          "A permission or plan error means the team's Calypso plan does not include Elephant. Say so and point the user to their Calypso workspace admin."
+          "An empty bucket list means nothing has been saved yet. Offer to save a first file or web page with `elephant-add-file` or `elephant-add-website`, or point to the Elephant console.",
+          "A permission or plan error means the team's Calypso plan does not include Elephant. Say so and point the user to their Calypso workspace admin.",
+          "Saving or organising tools missing from this chat means the user connected Elephant for reading only. They reconnect Elephant and allow saving and organising."
         ],
         "notThisPlugin": [
           "Changing the connected team. The user picks the team when connecting; reconnect to switch.",
-          "Adding or removing buckets or sources. That is Elephant Builder by Calypso or the Calypso console."
+          "Removing buckets or sources. Elephant never deletes; do that in the Elephant console."
         ]
       }
     }
   ],
   "skills": [
+    "add-a-file",
+    "add-a-website",
     "ask-elephant",
+    "create-a-bucket",
     "elephant-doesnt-know",
     "elephant-get-started",
     "elephant-status",
     "find-a-bucket",
     "open-a-source",
+    "organise-buckets",
     "search-elephant"
   ]
 }

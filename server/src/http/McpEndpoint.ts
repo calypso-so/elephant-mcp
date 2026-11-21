@@ -96,6 +96,7 @@ export class McpEndpoint {
       inventory,
       packageInfo: this.options.packageInfo,
       principal: credential.principal,
+      scopes: credential.scopes,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

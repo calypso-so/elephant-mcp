@@ -40,4 +40,4 @@ Each result carries a `source_index`, the whole passage as `text`, sometimes a `
 ## What Elephant does not do
 
 - It does not search the open web. Only sources the team added to Calypso are searched.
-- It does not add sources. Adding files and websites is Elephant Builder by Calypso.
+- It does not add sources. To save a file or a web page, use `elephant-add-file` or `elephant-add-website`.

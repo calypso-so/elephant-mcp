@@ -26,14 +26,14 @@ CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server [--preset all|eleph
 | `CALYPSO_API_BASE_URL` | `https://api.calypso.so/v1` | Calypso API |
 | `ELEPHANT_PRESET` | `all` | default for `--preset` |
 
-`all` publishes both tool sets under the `elephant` server name and hatches like Elephant; it exists only locally, the registry never serves it over HTTP. Discovery and the knowledge inventory load once at startup. Nothing of ours writes to stdout, which belongs to the protocol; `--help` and `--version` answer on stderr.
+`all` publishes every tool under the `elephant` server name; `elephant` keeps the four reading tools only, as it always has locally. Both hatch, and neither is served over HTTP. Discovery and the knowledge inventory load once at startup. Nothing of ours writes to stdout, which belongs to the protocol; `--help` and `--version` answer on stderr.
 
 ## Endpoints
 
 | Path | Purpose |
 |---|---|
-| `POST /elephant/mcp` | Elephant (read-only tools) |
-| `POST /elephant/builder/mcp` | Elephant Builder (add/create tools) |
+| `POST /elephant/mcp` | Elephant: every tool, offered by the scopes the caller's grant carries |
+| `POST /elephant/builder/mcp` | Elephant Builder (the four add tools; kept for existing connections) |
 | `GET /.well-known/oauth-protected-resource/elephant/mcp` | RFC 9728 metadata for Elephant |
 | `GET /.well-known/oauth-protected-resource/elephant/builder/mcp` | RFC 9728 metadata for Elephant Builder |
 | `GET /healthz` | `{ ok, version }` |
@@ -42,7 +42,7 @@ CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server [--preset all|eleph
 
 ## Authentication
 
-- **OAuth access token** from `login.calypso.so`: ES256 JWT, `aud` = the endpoint URL, `scope` = `elephant:read` or `elephant:write`, and an `ek` claim holding the grant's Calypso API key sealed with AES-256-GCM (`base64url(iv) "." base64url(ciphertext‖tag)`). A token for one endpoint is refused on the other.
+- **OAuth access token** from `login.calypso.so`: ES256 JWT, `aud` = the endpoint URL, `scope` = the scopes the user allowed (`elephant:read`, and on `/elephant/mcp` optionally `elephant:write` and `elephant:organise`), and an `ek` claim holding the grant's Calypso API key sealed with AES-256-GCM (`base64url(iv) "." base64url(ciphertext‖tag)`). A token for one endpoint is refused on the other.
 - **Calypso API key** (`Authorization: Bearer sk-…`), for testing and clients that cannot do OAuth. Header only, never in the URL.
 
 An unauthenticated request gets `401` with `WWW-Authenticate: Bearer resource_metadata="…"`, which is how ChatGPT discovers sign-in.
@@ -71,9 +71,12 @@ src/
   tools/                 one class per tool, each owning its name, wording and inputs
     ElephantTool.ts        base class: call() turns failures into readable tool errors
     AskTool, SearchTool, ListBucketsTool, OpenSourceTool            (Elephant)
-    AddFileTool, AddFilesTool, AddWebsiteTool, CreateBucketTool     (Elephant Builder)
+    AddFileTool, AddFilesTool, AddWebsiteTool, CreateBucketTool     (add)
+    RenameBucketTool, MoveSourcesTool                               (organise)
     ToolContext.ts, ToolLogger.ts, schemaParts.ts
-  presets/               ToolPreset + ToolPresetRegistry: each plugin's path, scope and tools
+  presets/               ToolPreset + ToolPresetRegistry: each endpoint's path, scope and tools;
+                         ToolGroup (read, add, organise) and PresetInstructions, which decide
+                         what one caller is offered and told
   calypso/               the Calypso API as one caller sees it (CalypsoApi groups the resources:
                          AgentResponses, KnowledgeSearch, KnowledgeBuckets, KnowledgeFiles,
                          KnowledgeBatches, KnowledgeWebsites) plus agent discovery

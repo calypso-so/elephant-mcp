@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { countBucketTargets } from "../calypso/BucketDestination.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -43,6 +44,7 @@ export class AddWebsiteTool extends ElephantTool<typeof inputSchema> {
     "Adding a page the team already has is refused as `website_url_exists`, unless the same `idempotencyKey` is sent again.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.add;
   readonly annotations = {
     readOnlyHint: false,
     destructiveHint: false,

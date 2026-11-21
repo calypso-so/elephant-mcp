@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { BucketSource } from "../calypso/BucketSources.js";
 import type { KnowledgeBucketDescriptor } from "../calypso/bucketList.js";
 import type { CalypsoApi } from "../calypso/CalypsoApi.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -40,6 +41,7 @@ export class ListBucketsTool extends ElephantTool<typeof inputSchema> {
     "Call a source by its name when you tell the user about it. `moreSources: true` means the bucket holds more than the ones named.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.read;
   readonly annotations = {
     readOnlyHint: true,
     destructiveHint: false,

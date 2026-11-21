@@ -28,7 +28,20 @@ export class SlugTable {
       serverName: "elephant",
       endpoint: "https://mcp.calypso.so/elephant/mcp",
       scope: "elephant:read",
-      tools: ["elephant-ask", "elephant-search", "elephant-list-buckets", "elephant-open-source"],
+      // One plugin for everything since 2.0. `scope` is what connecting
+      // needs; saving and organising are further scopes the user may allow.
+      tools: [
+        "elephant-ask",
+        "elephant-search",
+        "elephant-list-buckets",
+        "elephant-open-source",
+        "elephant-add-file",
+        "elephant-add-files",
+        "elephant-add-website",
+        "elephant-create-bucket",
+        "elephant-rename-bucket",
+        "elephant-move-sources",
+      ],
     },
     {
       package: "elephant-builder",

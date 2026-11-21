@@ -78,18 +78,24 @@ test("parseStdioOptions: flags beat env, env beats defaults", () => {
   assert.throws(() => parseStdioOptions(["--preset"], base), /needs a value/);
 });
 
-test("localPreset: all = both hosted tool sets, hosted ids unchanged", () => {
+const READ_TOOLS = [
+  "elephant-ask",
+  "elephant-search",
+  "elephant-list-buckets",
+  "elephant-open-source",
+];
+
+test("localPreset: all = everything hosted Elephant offers, elephant = reading only", () => {
   const all = localPreset("all");
-  assert.deepEqual(all.toolNames(), [
-    ...ToolPresetRegistry.elephant.toolNames(),
-    ...ToolPresetRegistry.elephantBuilder.toolNames(),
-  ]);
+  assert.deepEqual(all.toolNames(), ToolPresetRegistry.elephant.toolNames());
   assert.equal(all.hatches, true);
   assert.equal(all.serverName, "elephant");
   assert.match(all.instructions, /cites every source/);
-  assert.match(all.instructions, /can also add files/);
   assert.doesNotMatch(all.instructions, /use Elephant Builder/);
-  assert.equal(localPreset("elephant"), ToolPresetRegistry.elephant);
+  // Someone who pinned `elephant` to keep their assistant from changing
+  // anything keeps getting the four reading tools and nothing else.
+  assert.deepEqual(localPreset("elephant").toolNames(), READ_TOOLS);
+  assert.equal(localPreset("elephant").hatches, true);
   assert.equal(
     localPreset("elephant-builder"),
     ToolPresetRegistry.elephantBuilder,
@@ -167,7 +173,7 @@ test("stdio: --preset elephant publishes the read-only set alone", async () => {
     const { tools } = await client.listTools();
     assert.deepEqual(
       tools.map((tool) => tool.name),
-      ToolPresetRegistry.elephant.toolNames(),
+      READ_TOOLS,
     );
   } finally {
     await close();

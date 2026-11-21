@@ -43,9 +43,10 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json" },
   });
 
-async function connect(preset) {
+async function connect(preset, scopes) {
   const server = createElephantMcpServer({
     preset,
+    scopes,
     api: { apiKey: "sk-test", apiBaseUrl: API_BASE },
     agents,
     packageInfo: {
@@ -62,17 +63,26 @@ async function connect(preset) {
 
 const text = (result) => result.content.map((part) => part.text).join("");
 
-test("Elephant publishes its four read-only tools, in order", async () => {
-  const client = await connect(ToolPresetRegistry.elephant);
+const READ_TOOLS = [
+  "elephant-ask",
+  "elephant-search",
+  "elephant-list-buckets",
+  "elephant-open-source",
+];
+const ADD_TOOLS = [
+  "elephant-add-file",
+  "elephant-add-files",
+  "elephant-add-website",
+  "elephant-create-bucket",
+];
+const ORGANISE_TOOLS = ["elephant-rename-bucket", "elephant-move-sources"];
+
+test("a caller who only allowed reading sees the four reading tools", async () => {
+  const client = await connect(ToolPresetRegistry.elephant, ["elephant:read"]);
   const { tools } = await client.listTools();
   assert.deepEqual(
     tools.map((tool) => tool.name),
-    [
-      "elephant-ask",
-      "elephant-search",
-      "elephant-list-buckets",
-      "elephant-open-source",
-    ],
+    READ_TOOLS,
   );
   // A directory review reads these three as explicit booleans on every tool.
   for (const tool of tools) {
@@ -80,6 +90,64 @@ test("Elephant publishes its four read-only tools, in order", async () => {
     assert.equal(tool.annotations?.destructiveHint, false, tool.name);
     assert.equal(tool.annotations?.openWorldHint, false, tool.name);
   }
+  // The session is told what it cannot do, and how the user gets it.
+  const instructions = client.getInstructions() ?? "";
+  assert.match(instructions, /cannot add files, websites or buckets/);
+  assert.match(instructions, /rename buckets or move sources/);
+  assert.match(instructions, /reconnect Elephant and allow it/);
+  assert.doesNotMatch(instructions, /It can save files/);
+  // A tool the caller was not offered does not exist for them.
+  const refused = await client
+    .callTool({ name: "elephant-create-bucket", arguments: { name: "x" } })
+    .then(
+      (result) => result.isError === true,
+      () => true,
+    );
+  assert.equal(refused, true);
+});
+
+test("each consent adds its own tools and its own instructions", async () => {
+  const adding = await connect(ToolPresetRegistry.elephant, [
+    "elephant:read",
+    "elephant:write",
+  ]);
+  assert.deepEqual(
+    (await adding.listTools()).tools.map((tool) => tool.name),
+    [...READ_TOOLS, ...ADD_TOOLS],
+  );
+  assert.match(adding.getInstructions() ?? "", /It can save files/);
+  assert.match(
+    adding.getInstructions() ?? "",
+    /cannot rename buckets or move sources/,
+  );
+
+  const everything = await connect(ToolPresetRegistry.elephant, [
+    "elephant:read",
+    "elephant:write",
+    "elephant:organise",
+  ]);
+  const { tools } = await everything.listTools();
+  assert.deepEqual(
+    tools.map((tool) => tool.name),
+    [...READ_TOOLS, ...ADD_TOOLS, ...ORGANISE_TOOLS],
+  );
+  assert.doesNotMatch(everything.getInstructions() ?? "", /cannot/);
+  // Nothing in this release deletes: no tool may claim to be destructive,
+  // and only the reading tools may claim to be read-only.
+  for (const tool of tools) {
+    assert.equal(tool.annotations?.destructiveHint, false, tool.name);
+    assert.equal(
+      tool.annotations?.readOnlyHint,
+      READ_TOOLS.includes(tool.name),
+      tool.name,
+    );
+  }
+});
+
+test("an API key is offered every tool: the API decides what it may do", async () => {
+  const client = await connect(ToolPresetRegistry.elephant);
+  const { tools } = await client.listTools();
+  assert.equal(tools.length, 10);
   assert.equal(client.getServerVersion().name, "elephant");
   assert.match(client.getInstructions() ?? "", /Elephant by Calypso/);
   assert.equal(client.getServerCapabilities()?.resources, undefined);
@@ -653,6 +721,66 @@ test("API errors come back as tool errors carrying the typed code", async () => 
     text(result),
     /^Error: Creating the bucket failed\. .*409: bucket_slug_exists/,
   );
+});
+
+test("elephant-rename-bucket patches the bucket by id or slug", async () => {
+  const calls = stubCalypso(() => json({ id: "b1", name: "Research" }));
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-rename-bucket",
+    arguments: { bucket: "old notes", name: " Research " },
+  });
+  assert.equal(result.isError, undefined);
+  assert.equal(calls[0].url, `${API_BASE}/buckets/old%20notes`);
+  assert.equal(calls[0].init.method, "PATCH");
+  assert.deepEqual(calls[0].body, { name: "Research" });
+
+  // Nothing to change is refused here, before the API is asked.
+  const empty = stubCalypso(() => json({}));
+  const refused = await client.callTool({
+    name: "elephant-rename-bucket",
+    arguments: { bucket: "b1" },
+  });
+  assert.equal(refused.isError, true);
+  assert.match(text(refused), /`name`, a new `description`, or both/);
+  assert.equal(empty.length, 0);
+});
+
+test("elephant-move-sources moves into the destination and reports each source", async () => {
+  const calls = stubCalypso(() =>
+    json({
+      moved: 1,
+      requested: 2,
+      sources: [
+        { id: "k1", status: "moved" },
+        { id: "k2", status: "not_in_source_bucket" },
+      ],
+    }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-move-sources",
+    arguments: {
+      sourceIds: ["k1", "k2", "k1"],
+      fromBucket: "inbox",
+      toBucket: "research",
+    },
+  });
+  assert.equal(result.isError, undefined);
+  assert.equal(calls[0].url, `${API_BASE}/buckets/research/sources:move`);
+  assert.deepEqual(calls[0].body, {
+    source_ids: ["k1", "k2"],
+    from_bucket: "inbox",
+  });
+  assert.match(text(result), /not_in_source_bucket/);
+
+  const same = stubCalypso(() => json({}));
+  const refused = await client.callTool({
+    name: "elephant-move-sources",
+    arguments: { sourceIds: ["k1"], fromBucket: "inbox", toBucket: "inbox" },
+  });
+  assert.equal(refused.isError, true);
+  assert.equal(same.length, 0);
 });
 
 test("elephant-create-bucket returns only declared fields as structured content", async () => {

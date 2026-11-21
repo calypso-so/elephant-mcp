@@ -26,10 +26,10 @@ The result gives the file name, type, size, indexing status and its sync state i
 - Report the file name, type and size in plain words, and whether it is indexed ("ready"), still indexing, or failed.
 - Cite the source by file name when you report its details.
 - A source that is still indexing will not appear in answers yet; say so, and suggest asking again later.
-- A failed source needs to be added again; that is done in Calypso or with Elephant Builder by Calypso.
+- A failed source needs to be added again: save it again with `elephant-add-file` or `elephant-add-website`.
 - This tool reports details, not the text of the source. To read what a source says, search it with `elephant-search` and cite the passages.
 
 ## What Elephant does not do
 
 - It does not download, edit or delete sources.
-- It does not re-run indexing. Re-adding a source is Elephant Builder by Calypso or the Calypso console.
+- It does not re-run indexing. Re-add the source with `elephant-add-file` or `elephant-add-website`.

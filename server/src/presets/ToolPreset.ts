@@ -1,4 +1,7 @@
+import type { GrantScopes } from "../auth/GrantScopes.js";
 import type { ElephantTool } from "../tools/ElephantTool.js";
+import { PresetInstructions } from "./PresetInstructions.js";
+import type { ToolGroup } from "./ToolGroup.js";
 
 export type ToolPresetOptions = {
   /** Stable identifier, e.g. `elephant`. */
@@ -9,9 +12,15 @@ export type ToolPresetOptions = {
   readonly serverName: string;
   /** Human name shown on consent and in protected-resource metadata. */
   readonly displayName: string;
-  /** Routing guidance returned in `initialize.instructions`. */
+  /**
+   * What the server is, in a sentence or two. What a caller can and cannot
+   * do with it is added per caller; see `instructionsFor`.
+   */
   readonly instructions: string;
-  /** OAuth scope a bearer token must carry to call this preset. */
+  /**
+   * OAuth scope a bearer token must carry to connect at all. Further tools
+   * are unlocked by the scopes of their groups.
+   */
   readonly scope: string;
   /** The tools this preset publishes, in `tools/list` order. */
   readonly tools: readonly ElephantTool[];
@@ -53,6 +62,27 @@ export class ToolPreset {
 
   toolNames(): string[] {
     return this.tools.map((tool) => tool.name);
+  }
+
+  /** The groups this preset's tools belong to, in first-seen order. */
+  groups(): ToolGroup[] {
+    return [...new Set(this.tools.map((tool) => tool.group))];
+  }
+
+  /** Every OAuth scope a grant for this preset may carry. */
+  scopes(): string[] {
+    if (!this.scope) return [];
+    return [...new Set([this.scope, ...this.groups().map((g) => g.scope)])];
+  }
+
+  /** The tools one caller is offered: those of the groups they agreed to. */
+  toolsFor(grant: GrantScopes): ElephantTool[] {
+    return this.tools.filter((tool) => grant.allows(tool.group));
+  }
+
+  /** `initialize.instructions` for one caller. */
+  instructionsFor(grant: GrantScopes): string {
+    return PresetInstructions.compose(this.instructions, this.groups(), grant);
   }
 
   /** Absolute resource URL (`aud`) for this preset under a public base URL. */

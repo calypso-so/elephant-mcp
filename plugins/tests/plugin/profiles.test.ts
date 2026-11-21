@@ -12,17 +12,34 @@ const PROFILES = [
     listingTitle: "Elephant: PDF AI & Docs Q&A",
     serverName: "elephant",
     url: "https://mcp.calypso.so/elephant/mcp",
-    tools: ["elephant-ask", "elephant-search", "elephant-list-buckets", "elephant-open-source"],
+    version: "2.0.0",
+    tools: [
+      "elephant-ask",
+      "elephant-search",
+      "elephant-list-buckets",
+      "elephant-open-source",
+      "elephant-add-file",
+      "elephant-add-files",
+      "elephant-add-website",
+      "elephant-create-bucket",
+      "elephant-rename-bucket",
+      "elephant-move-sources",
+    ],
     skills: [
+      "add-a-file",
+      "add-a-website",
       "ask-elephant",
+      "create-a-bucket",
       "elephant-doesnt-know",
       "elephant-get-started",
       "elephant-status",
       "find-a-bucket",
       "open-a-source",
+      "organise-buckets",
       "search-elephant",
     ],
-    sibling: "Elephant Builder by Calypso",
+    // Elephant does everything but delete: that is what it sends elsewhere.
+    sibling: "never deletes",
   },
   {
     name: "elephant-builder",
@@ -30,6 +47,7 @@ const PROFILES = [
     listingTitle: "Elephant Builder: Save PDFs",
     serverName: "elephant-builder",
     url: "https://mcp.calypso.so/elephant/builder/mcp",
+    version: "1.0.1",
     tools: ["elephant-add-file", "elephant-add-files", "elephant-add-website", "elephant-create-bucket"],
     skills: ["add-a-file", "add-a-website", "create-a-bucket", "elephant-builder-get-started", "elephant-builder-status"],
     sibling: "Elephant by Calypso",
@@ -58,13 +76,13 @@ describe("profiles", () => {
         assert.equal(entry.displayName, expected.displayName);
         assert.equal(entry.listingTitle, expected.listingTitle);
         assert.deepEqual(entry.tools, expected.tools);
-        assert.equal(Fixtures.target.archiveName(profile), `${expected.name}-openai-1.0.1.zip`);
-        assert.equal(SlugTable.archiveName(expected.name, "1.0.1"), Fixtures.target.archiveName(profile));
+        assert.equal(Fixtures.target.archiveName(profile), `${expected.name}-openai-${expected.version}.zip`);
+        assert.equal(SlugTable.archiveName(expected.name, expected.version), Fixtures.target.archiveName(profile));
       });
 
       it("emits the manifest in the portal's Codex layout", () => {
         assert.equal(manifest.name, expected.name);
-        assert.equal(manifest.version, "1.0.1");
+        assert.equal(manifest.version, expected.version);
         assert.equal(manifest.skills, "./skills/");
         assert.equal(manifest.mcpServers, "./.mcp.json");
         assert.equal(manifest.license, "MIT");

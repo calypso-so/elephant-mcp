@@ -182,7 +182,8 @@ test("protected-resource metadata names the issuer and scope", async () => {
   assert.deepEqual(await res.json(), {
     resource: `${baseUrl}/elephant/mcp`,
     authorization_servers: [ISSUER],
-    scopes_supported: ["elephant:read"],
+    // Reading connects; adding and organising are offered on top, by consent.
+    scopes_supported: ["elephant:read", "elephant:write", "elephant:organise"],
     bearer_methods_supported: ["header"],
     resource_name: "Elephant by Calypso",
     resource_documentation: "https://www.calypso.so/elephant",

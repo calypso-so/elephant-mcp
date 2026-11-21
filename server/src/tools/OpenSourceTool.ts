@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -30,6 +31,7 @@ export class OpenSourceTool extends ElephantTool<typeof inputSchema> {
     "Use it when the user asks about a specific source cited in an answer or listed by elephant-list-buckets.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.read;
   readonly annotations = {
     readOnlyHint: true,
     destructiveHint: false,

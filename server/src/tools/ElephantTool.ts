@@ -4,6 +4,7 @@ import type {
 } from "@modelcontextprotocol/sdk/types.js";
 import type { z } from "zod";
 
+import type { ToolGroup } from "../presets/ToolGroup.js";
 import type { ToolContext } from "./ToolContext.js";
 
 export type InputShape = Record<string, z.ZodTypeAny>;
@@ -30,6 +31,8 @@ export abstract class ElephantTool<Shape extends InputShape = InputShape> {
   abstract readonly title: string;
   abstract readonly description: string;
   abstract readonly inputSchema: Shape;
+  /** What the tool does to knowledge, which decides who is offered it. */
+  abstract readonly group: ToolGroup;
   /**
    * The three hints a directory review reads are stated outright on every
    * tool, never left to a default: whether it only reads, whether it can

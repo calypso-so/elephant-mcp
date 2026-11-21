@@ -32,7 +32,9 @@
       "elephant-add-file",
       "elephant-add-files",
       "elephant-add-website",
-      "elephant-create-bucket"
+      "elephant-create-bucket",
+      "elephant-rename-bucket",
+      "elephant-move-sources"
     ],
     "canonicalTools": [
       "calypso-agent",

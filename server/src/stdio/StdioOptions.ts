@@ -20,8 +20,9 @@ Environment:
   ELEPHANT_PRESET        default for --preset (default all)
 
 Options:
-  --preset <id>   which tools to publish: elephant (read), elephant-builder
-                  (write) or all (both; the default)
+  --preset <id>   which tools to publish: elephant (read only),
+                  elephant-builder (add only) or all (read, add and
+                  organise; the default)
   --version       print the version and exit
   --help          print this help and exit
 `;

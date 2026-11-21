@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { BATCH_MAX_FILES } from "../calypso/BatchManifest.js";
 import { countBucketTargets } from "../calypso/BucketDestination.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -67,6 +68,7 @@ export class AddFilesTool extends ElephantTool<typeof inputSchema> {
     "For a single file the user attached, use elephant-add-file instead.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.add;
   readonly annotations = {
     readOnlyHint: false,
     destructiveHint: false,

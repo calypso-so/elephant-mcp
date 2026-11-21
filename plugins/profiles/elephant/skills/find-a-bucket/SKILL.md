@@ -29,5 +29,5 @@ Each bucket comes back with its `id`, `name`, `slug`, member counts, whether its
 
 ## What Elephant does not do
 
-- It does not create, rename or archive buckets. Creating buckets is Elephant Builder by Calypso; renaming and archiving happen in the Calypso console.
+- It does not create, rename or archive buckets. Create one with `elephant-create-bucket` and rename one with `elephant-rename-bucket`; archiving happens in the Elephant console.
 - It does not show the content of a bucket's sources; search them with `elephant-search`.

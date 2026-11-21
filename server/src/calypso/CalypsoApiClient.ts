@@ -2,7 +2,7 @@ import { formatApiError, readResponseBody } from "./apiErrors.js";
 import { type CalypsoApiConfig, requireApiKey } from "./CalypsoApiConfig.js";
 
 export type CalypsoRequest = {
-  readonly method: "GET" | "POST";
+  readonly method: "GET" | "POST" | "PATCH";
   /** Sent as JSON when present. */
   readonly body?: unknown;
   /** Extra headers, e.g. `Idempotency-Key`. */

@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { GrantScopes } from "./auth/GrantScopes.js";
 import type { AgentCatalogSnapshot } from "./calypso/AgentCatalog.js";
 import { AgentCatalog } from "./calypso/AgentCatalog.js";
 import { CalypsoApi } from "./calypso/CalypsoApi.js";
@@ -29,6 +30,11 @@ export type ElephantMcpServerOptions = {
   readonly packageInfo: PackageInfo;
   /** Safe-to-log label for the caller, e.g. `grant:<id>`. */
   readonly principal: string;
+  /**
+   * The OAuth scopes the caller's grant carries. Absent or empty (a local
+   * server, a raw API key) offers every tool of the preset.
+   */
+  readonly scopes?: readonly string[];
 };
 
 export const GET_STARTED_PROMPT = "elephant-get-started";
@@ -45,6 +51,8 @@ export function createElephantMcpServer(
   options: ElephantMcpServerOptions,
 ): McpServer {
   const { preset, packageInfo } = options;
+  const grant = GrantScopes.of(options.scopes);
+  const instructions = preset.instructionsFor(grant);
   const inventory = preset.hatches ? (options.inventory ?? null) : null;
   const server = new McpServer(
     {
@@ -55,8 +63,8 @@ export function createElephantMcpServer(
     {
       capabilities: { logging: {} },
       instructions: preset.hatches
-        ? hatchingInstructions(preset.instructions, inventory)
-        : preset.instructions,
+        ? hatchingInstructions(instructions, inventory)
+        : instructions,
     },
   );
   const api = new CalypsoApi(
@@ -69,7 +77,7 @@ export function createElephantMcpServer(
     inventory: new KnowledgeInventory(inventory, () => api.buckets.list()),
     log: new ToolLogger(server, options.principal),
   };
-  for (const tool of preset.tools) register(server, tool, context);
+  for (const tool of preset.toolsFor(grant)) register(server, tool, context);
   if (preset.hatches) registerGetStarted(server, context);
   return server;
 }

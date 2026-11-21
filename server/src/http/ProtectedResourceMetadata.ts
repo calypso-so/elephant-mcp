@@ -35,7 +35,7 @@ export class ProtectedResourceMetadata {
     return {
       resource: preset.resourceUrl(this.publicBaseUrl),
       authorization_servers: [this.issuer],
-      scopes_supported: preset.scope ? [preset.scope] : [],
+      scopes_supported: preset.scopes(),
       bearer_methods_supported: ["header"],
       resource_name: preset.displayName,
       resource_documentation: DOCUMENTATION_URL,

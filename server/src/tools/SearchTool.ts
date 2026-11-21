@@ -4,6 +4,7 @@ import { SEARCH_DEPTHS } from "../calypso/AnswerDepth.js";
 import { MAX_EXTRA_QUERIES } from "../calypso/KnowledgeSearch.js";
 
 import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -63,6 +64,7 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
     "Pass `buckets` (ids or slugs from elephant-list-buckets, up to 5) to search specific buckets, or `agent` to search what one Calypso agent can see — not both.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.read;
   readonly annotations = {
     readOnlyHint: true,
     destructiveHint: false,

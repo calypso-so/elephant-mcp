@@ -16,7 +16,7 @@
 <table>
 <tr>
 <td align="center" width="25%"><h3>1 URL</h3>to connect<br><sub><a href="#install">no key to paste</a></sub></td>
-<td align="center" width="25%"><h3>8 tools</h3>on two servers<br><sub><a href="#pick-your-server">4 to read, 4 to write</a></sub></td>
+<td align="center" width="25%"><h3>10 tools</h3>on one server<br><sub><a href="#pick-your-server">read, save, organise</a></sub></td>
 <td align="center" width="25%"><h3>0 databases</h3>on this server<br><sub><a href="#how-it-works">every request stands alone</a></sub></td>
 <td align="center" width="25%"><h3>1 click</h3>to disconnect<br><sub><a href="#privacy">key revoked, access ends</a></sub></td>
 </tr>
@@ -112,7 +112,7 @@ CALYPSO_API_KEY=sk-… npx -y @calypsohq/elephant-mcp-server
 { "mcpServers": { "elephant": { "command": "npx", "args": ["-y", "@calypsohq/elephant-mcp-server"], "env": { "CALYPSO_API_KEY": "sk-…" } } } }
 ```
 
-Locally it publishes all eight tools under one name, since the key is yours. `--preset elephant` keeps it read-only; `--preset elephant-builder` keeps only the add tools. `CALYPSO_API_BASE_URL` points it at another Calypso API.
+Locally it publishes all ten tools, since the key is yours and the Calypso API decides what it may do. `--preset elephant` keeps it read-only; `--preset elephant-builder` keeps only the add tools. `CALYPSO_API_BASE_URL` points it at another Calypso API.
 
 <sub>Needs an Elephant account: sign up at [elephant.calypso.so](https://elephant.calypso.so). Nothing saved in it yet? Elephant will tell you, and show you the first step — see [First minute](#first-minute).</sub>
 
@@ -120,10 +120,10 @@ Locally it publishes all eight tools under one name, since the key is yours. `--
 
 | Server | Endpoint | Scope | Tools |
 |---|---|---|---|
-| **Elephant by Calypso** · `elephant` | `/elephant/mcp` | `elephant:read` | Ask Elephant · Search Elephant · List buckets · Open a source |
-| **Elephant Builder by Calypso** · `elephant-builder` | `/elephant/builder/mcp` | `elephant:write` | Add a file · Add files · Add a website · Create a bucket |
+| **Elephant by Calypso** · `elephant` | `/elephant/mcp` | `elephant:read`, plus `elephant:write` and `elephant:organise` when you allow them | All ten tools below |
+| **Elephant Builder by Calypso** · `elephant-builder` | `/elephant/builder/mcp` | `elephant:write` | The four add tools. Kept for existing connections; Elephant now does the same |
 
-Elephant only reads. Builder adds to your knowledge and never deletes. Most people connect Elephant alone and add files at elephant.calypso.so; connect Builder when you want your AI to save a PDF or a web page for you.
+One server does everything, and you decide how much. When you connect, you choose what Elephant may do: read only, or also save and organise. Your assistant is offered exactly the tools you allowed and is told what it cannot do. Nothing in Elephant deletes.
 
 | Tool | What it does |
 |---|---|
@@ -135,6 +135,8 @@ Elephant only reads. Builder adds to your knowledge and never deletes. Most peop
 | `elephant-add-files` | Up to 100 files in one request |
 | `elephant-add-website` | Adds a web page; Calypso reads it and writes its title, summary and tags |
 | `elephant-create-bucket` | A new bucket to hold sources |
+| `elephant-rename-bucket` | A bucket's name or description; the sources in it stay as they are |
+| `elephant-move-sources` | Files a source in another bucket. Added there first, then taken out of the old one; nothing is deleted |
 
 ## First minute
 
@@ -157,7 +159,8 @@ server verifies the token, unseals the grant's key ──▶ api.calypso.so/v1  
 | Rule | What it means |
 |---|---|
 | **No state** | No database, no sessions. Every `POST` builds a fresh server for its caller, so any instance serves any request |
-| **One key per grant** | Allowing access mints a Calypso API key scoped to the server: read for Elephant, add and create for Builder |
+| **One key per grant** | Allowing access mints a Calypso API key limited to what you allowed: reading, and saving and organising only if you said so |
+| **Tools follow consent** | `tools/list` returns the tools of the scopes your grant carries. A read-only connection sees four tools, and its instructions say what it cannot do |
 | **Short, bound tokens** | ES256 JWT, 15 minutes, audience = the endpoint URL. A token for one server is refused on the other |
 | **Key travels sealed** | The grant's key rides inside the token, sealed with AES-256-GCM. Only this server and the authorization server hold the key to open it |
 | **Revocation is real** | Disconnect revokes the key. Calls fail within a minute, whatever token the client still holds |

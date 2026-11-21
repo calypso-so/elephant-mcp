@@ -129,19 +129,19 @@ describe("SkillToolRule", () => {
     assert.ok((await messages(rule, bad)).some((message) => message.includes("calypso-agent")));
   });
 
-  it("rejects a Builder tool in an Elephant skill outside a routing heading", async () => {
-    const bad = Fixtures.withSkillText(view, "elephant-status", "\n## Tips\n\nUse `elephant-add-file` to add files.\n");
-    assert.ok((await messages(rule, bad)).some((message) => message.includes('"elephant-add-file"')));
-  });
-
-  it("allows a Builder tool under a routing heading", async () => {
-    const ok = Fixtures.withSkillText(view, "elephant-status", "\n## Not this plugin\n\n`elephant-add-file` belongs to Elephant Builder by Calypso.\n");
+  it("lets Elephant name its own saving tools anywhere, now that it ships them", async () => {
+    const ok = Fixtures.withSkillText(view, "elephant-status", "\n## Tips\n\nUse `elephant-add-file` to add files.\n");
     assert.deepEqual(await messages(rule, ok), []);
   });
 
+  it("allows a tool the profile does not ship under a routing heading", async () => {
+    const ok = Fixtures.withSkillText(builder.view, "add-a-file", "\n## Not this plugin\n\n`elephant-ask` belongs to Elephant by Calypso.\n");
+    assert.deepEqual(await messages(rule, ok, builder.profile), []);
+  });
+
   it("rejects a sibling tool in the manifest, where no routing exemption exists", async () => {
-    const bad = Fixtures.withManifest(view, (manifest) => manifest.interface.defaultPrompt.push("Run elephant-create-bucket"));
-    assert.ok((await messages(rule, bad)).length > 0);
+    const bad = Fixtures.withManifest(builder.view, (manifest) => manifest.interface.defaultPrompt.push("Run elephant-ask"));
+    assert.ok((await messages(rule, bad, builder.profile)).length > 0);
   });
 
   it("rejects a shipped tool that no skill teaches", async () => {
@@ -195,9 +195,11 @@ describe("ForbiddenTextRule", () => {
   });
 
   it("applies profile fences on top of the shared ones", async () => {
-    const bad = Fixtures.withSkillText(view, "ask-elephant", "\nI uploaded the file.\n");
-    assert.ok((await messages(rule, bad)).some((message) => message.includes("read-only")));
-    assert.deepEqual(await messages(rule, Fixtures.withSkillText(builder.view, "add-a-file", "\nI uploaded the file.\n"), builder.profile), []);
+    // Elephant saves and organises but never deletes: a skill may not claim it did.
+    const bad = Fixtures.withSkillText(view, "ask-elephant", "\nI deleted the file.\n");
+    assert.ok((await messages(rule, bad)).some((message) => message.includes("never deletes")));
+    assert.deepEqual(await messages(rule, Fixtures.withSkillText(view, "ask-elephant", "\nI uploaded the file.\n")), []);
+    assert.deepEqual(await messages(rule, Fixtures.withSkillText(builder.view, "add-a-file", "\nI deleted the file.\n"), builder.profile), []);
   });
 });
 
@@ -218,7 +220,7 @@ describe("ReviewCasesRule", () => {
   it("requires positive cases to trigger a shipped tool and negatives none", async () => {
     const bad = Fixtures.withManifest(view, (manifest) => {
       const cases = manifest.extensions["com.openai"].review.test_cases;
-      cases.positive[0].tools_triggered = "elephant-add-file";
+      cases.positive[0].tools_triggered = "elephant-forget";
       cases.negative[0].tools_triggered = "elephant-ask";
     });
     const found = await messages(rule, bad);

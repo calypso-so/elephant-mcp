@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { ToolGroup } from "../presets/ToolGroup.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -40,6 +41,7 @@ export class CreateBucketTool extends ElephantTool<typeof inputSchema> {
     "Use it when the user wants to keep a new topic separate before adding files or websites.",
   ].join("\n");
   readonly inputSchema = inputSchema;
+  readonly group = ToolGroup.add;
   readonly outputSchema = outputSchema;
   readonly annotations = {
     readOnlyHint: false,
