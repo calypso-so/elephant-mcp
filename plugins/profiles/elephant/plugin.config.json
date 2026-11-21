@@ -104,9 +104,9 @@
         "expect": "elephant-add-file; confirms file name, bucket and indexing status"
       },
       {
-        "id": "move-source",
-        "prompt": "Move the shipping policy from our Policies bucket to the Product docs bucket.",
-        "expect": "elephant-list-buckets then elephant-move-sources; reports the outcome by source name"
+        "id": "describe-bucket",
+        "prompt": "Change the description of our Onboarding bucket to: Checklists and guides for new hires.",
+        "expect": "elephant-list-buckets then elephant-rename-bucket; confirms the bucket and its new description"
       },
       {
         "id": "delete-source",
@@ -160,12 +160,12 @@
         "expected_behavior": "Calls elephant-add-file with the attachment and the Policies bucket, then confirms the file name, the bucket and the indexing status."
       },
       {
-        "id": "move-source",
+        "id": "describe-bucket",
         "kind": "positive",
-        "description": "Move a source to another bucket",
-        "prompt": "Move the shipping policy from our Policies bucket to the Product docs bucket.",
-        "expected_tool": "elephant-move-sources",
-        "expected_behavior": "Finds the source and both buckets with elephant-list-buckets, calls elephant-move-sources, then reports what happened to the source by name. Nothing is deleted."
+        "description": "Update a bucket's description",
+        "prompt": "Change the description of our Onboarding bucket to: Checklists and guides for new hires.",
+        "expected_tool": "elephant-rename-bucket",
+        "expected_behavior": "Finds the Onboarding bucket with elephant-list-buckets, calls elephant-rename-bucket with the new description, then confirms the bucket's name and its new description. The sources in the bucket are unchanged, and running the case again gives the same result."
       },
       {
         "id": "delete-source",
