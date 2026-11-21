@@ -39,6 +39,7 @@ export class CreateBucketTool extends ElephantTool<typeof inputSchema> {
     "Creates a new knowledge bucket (a folder of sources) for the team.",
     "",
     "Use it when the user wants to keep a new topic separate before adding files or websites.",
+    "A new bucket needs no other setup: elephant-ask and elephant-search answer from it as soon as its files finish indexing.",
   ].join("\n");
   readonly inputSchema = inputSchema;
   readonly group = ToolGroup.add;

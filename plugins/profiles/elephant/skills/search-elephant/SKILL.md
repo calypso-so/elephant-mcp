@@ -11,7 +11,7 @@ Use `elephant-search` when the user wants the evidence itself: "where do we ment
 
 - `query` (required): what to look for, in the user's words.
 - `buckets` (optional): up to 5 bucket ids or slugs to search, when the user names buckets ("only in Product docs"). Find them with `elephant-list-buckets`.
-- `agent` (optional): a specific Elephant agent variant whose sources to search, only when the user names one. Do not pass `agent` and `buckets` together.
+- `agent` (optional): a specific Elephant agent variant whose sources to search, only when the user names one. Do not pass `agent` and `buckets` together. With neither, the search covers every bucket the user has.
 - `maxResults` (optional): 1 to 20, default 10. It is a ceiling, not a target: a search returns as many passages as it finds.
 - `depth` (optional): `fast` (default) runs one search; `thorough` runs several in parallel and merges them.
 - `alsoSearchFor` (optional): up to 2 other ways of saying the same thing, searched alongside `query`. Naming any makes the search thorough.

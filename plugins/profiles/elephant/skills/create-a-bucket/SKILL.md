@@ -16,6 +16,8 @@ A bucket is a folder of sources Elephant remembers. Use `elephant-create-bucket`
 
 You do not need this tool just to add a file: additions accept `createMissingBuckets: true` and create the bucket on the way.
 
+A new bucket needs no other setup: Elephant answers from it as soon as its first files finish indexing, usually within a minute.
+
 ## Report what happened
 
 - Cite the result: the bucket's name, slug and id as returned.

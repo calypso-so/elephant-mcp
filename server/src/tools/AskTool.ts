@@ -1,7 +1,13 @@
 import { z } from "zod";
 
-import { AgentResponses } from "../calypso/AgentResponses.js";
+import { AgentChoice, isUnknownAgent } from "../calypso/AgentChoice.js";
+import {
+  type AgentAnswer,
+  type AgentQuestion,
+  AgentResponses,
+} from "../calypso/AgentResponses.js";
 import { ANSWER_DEPTHS, AnswerDepth } from "../calypso/AnswerDepth.js";
+import type { CalypsoApi } from "../calypso/CalypsoApi.js";
 import { compactStrings } from "../calypso/coerce.js";
 import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
@@ -29,7 +35,15 @@ const inputSchema = {
     .string()
     .optional()
     .describe(
-      "Optional id of one of the team's Calypso agents. Omit to use the team's default agent.",
+      "Optional id of one of the team's Calypso agents, when the user names one. Omit it to answer from every bucket the user has, including ones created a moment ago.",
+    ),
+  buckets: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(5)
+    .optional()
+    .describe(
+      "Optional bucket ids or slugs (from elephant-list-buckets), up to 5, to answer only from those. Use it when the user names a folder or topic that matches a bucket; omit it otherwise and Elephant finds the right buckets itself.",
     ),
   depth: z
     .enum(ANSWER_DEPTHS)
@@ -55,7 +69,8 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     "Use it when the user asks about their own company, product, policies, documents or anything their team keeps in Calypso.",
     "Always cite the sources the answer returns. If the answer says the knowledge does not cover the question, say so plainly instead of answering from general knowledge.",
     "Each call stands alone: put everything needed to answer, including the subject of a follow-up, in the prompt.",
-    "Optional `model` picks one of the team's Calypso agents; omit it to use the default.",
+    "Without `model`, Elephant answers from every bucket the user has, including one created a moment ago. Optional `model` picks one of the team's Calypso agents instead, which reads only its own buckets. Optional `buckets` limits the answer to up to five named buckets.",
+    "When the user has more buckets than one answer reads, Elephant picks the ones with evidence and the reply names any it did not search; ask again with `buckets` to choose them.",
     "Optional `depth` (`fast`, `balanced`, `deep`) sets how much work the answer gets. Choose it from the question, not from habit: `fast` for one stated fact, `balanced` for an explanation or summary, `deep` when several sources must be compared or the answer will be acted on. The reply ends by naming the depth it was answered at.",
     "If an answer is thin, misses part of the question, or says the knowledge does not cover something the user expects to be there, ask once more one depth higher before telling the user it is not covered. Do not repeat a call at the same depth, and do not go above `deep`.",
     "A team's plan may cap depth; when the reply says it was answered at a lower depth than asked, that is the most this team allows, so do not retry higher.",
@@ -83,28 +98,39 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
       });
       return { text: emptyKnowledgeAnswer() };
     }
-    const agentId = agents.resolve(args.model);
+    const choice = AgentChoice.of(agents, args.model);
     const asked = AnswerDepth.named(args.depth);
     const fileIds = compactStrings(args.fileIds);
+    const buckets = compactStrings(args.buckets);
     const conversationId = AgentResponses.newConversationId();
+    const question: Omit<AgentQuestion, "agentId"> = {
+      prompt: args.prompt.trim(),
+      fileIds,
+      conversationId,
+      depth: asked,
+      buckets,
+    };
     await log.event("info", "Asking a Calypso agent.", {
       tool: this.name,
-      agent: agentId,
+      agent: choice.agentId,
       conversationId,
       fileCount: fileIds?.length ?? 0,
+      bucketCount: buckets?.length ?? 0,
     });
 
-    const answer = await api.agent
-      .ask({
-        agentId,
-        prompt: args.prompt.trim(),
-        fileIds,
-        conversationId,
-        depth: asked,
-      })
-      .catch((error: unknown) => {
-        throw AskTool.readable(error, fileIds);
+    const answer = await AskTool.askWithFallback(api, choice, question, log);
+    const agentId = answer.agentId;
+    // Retrieval could not run as asked: say why, in words the caller can
+    // act on, instead of relaying "not enough information".
+    const refusal = answer.diagnostics.failureReason();
+    if (refusal) {
+      await log.event("info", "Retrieval refused the request.", {
+        tool: this.name,
+        agent: agentId,
+        failureCode: answer.diagnostics.failureCode,
       });
+      throw new Error(refusal);
+    }
 
     await log.event("info", "Calypso agent answered.", {
       tool: this.name,
@@ -123,9 +149,72 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     const parts = [
       answer.text,
       sources,
+      await AskTool.coverageNote(api, answer),
       AskTool.depthNote(asked, answer.depth),
     ];
     return { text: parts.filter(Boolean).join("\n\n") };
+  }
+
+  /**
+   * The connector agent first; the catalog's default when this API does not
+   * know it yet. Only an "unknown agent" answer falls back: anything else is
+   * the real outcome of the question.
+   */
+  private static async askWithFallback(
+    api: CalypsoApi,
+    choice: AgentChoice,
+    question: Omit<AgentQuestion, "agentId">,
+    log: ToolContext["log"],
+  ): Promise<AgentAnswer & { agentId: string }> {
+    try {
+      const answer = await api.agent.ask({
+        ...question,
+        agentId: choice.agentId,
+      });
+      return { ...answer, agentId: choice.agentId };
+    } catch (error) {
+      if (!choice.fallbackId || !isUnknownAgent(error)) {
+        throw AskTool.readable(error, question.fileIds);
+      }
+      await log.event(
+        "warning",
+        "Connector agent unknown; asked the default.",
+        {
+          tool: "elephant-ask",
+          agent: choice.fallbackId,
+        },
+      );
+      const answer = await api.agent
+        .ask({ ...question, agentId: choice.fallbackId })
+        .catch((retryError: unknown) => {
+          throw AskTool.readable(retryError, question.fileIds);
+        });
+      return { ...answer, agentId: choice.fallbackId };
+    }
+  }
+
+  /**
+   * One line naming the buckets the answer did not read, when there were
+   * more than one answer reads. Names come from the bucket list; an id is
+   * shown when a name cannot be read.
+   */
+  private static async coverageNote(
+    api: CalypsoApi,
+    answer: AgentAnswer,
+  ): Promise<string> {
+    const coverage = answer.diagnostics.coverage;
+    if (!coverage) return "";
+    const names = new Map<string, string>();
+    try {
+      for (const bucket of (await api.buckets.list()).buckets) {
+        names.set(bucket.id, bucket.name || bucket.slug || bucket.id);
+      }
+    } catch {
+      // Ids are still an honest answer.
+    }
+    const label = (id: string) => names.get(id) ?? id;
+    const total = coverage.searched.length + coverage.unsearched.length;
+    return `Searched ${coverage.searched.length} of ${total} buckets, the ones with the strongest match. Not searched: ${coverage.unsearched.map(label).join(", ")}. Ask again with \`buckets\` to choose.`;
   }
 
   /**

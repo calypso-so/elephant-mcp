@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { CONNECTOR_AGENT_ID, isUnknownAgent } from "../calypso/AgentChoice.js";
 import { SEARCH_DEPTHS } from "../calypso/AnswerDepth.js";
 import { MAX_EXTRA_QUERIES } from "../calypso/KnowledgeSearch.js";
 
@@ -18,7 +19,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe(
-      "Optional id of one of the team's Calypso agents, to search only what that agent can see. Not together with buckets.",
+      "Optional id of one of the team's Calypso agents, to search only what that agent can see. Omit it (and `buckets`) to search every bucket the user has. Not together with buckets.",
     ),
   buckets: z
     .array(z.string())
@@ -88,7 +89,17 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
       });
       return { text: emptyKnowledgeAnswer() };
     }
-    const result = await api.search.search(args);
+    // Neither an agent nor buckets: every bucket the user has, through the
+    // connector agent. An API that does not know it yet searches the default.
+    const everywhere = !args.agent?.trim() && !args.buckets?.length;
+    const result = everywhere
+      ? await api.search
+          .search({ ...args, agent: CONNECTOR_AGENT_ID })
+          .catch((error: unknown) => {
+            if (!isUnknownAgent(error)) throw error;
+            return api.search.search(args);
+          })
+      : await api.search.search(args);
     await log.event("info", "Knowledge search completed.", {
       tool: this.name,
       strategy: result.strategy,

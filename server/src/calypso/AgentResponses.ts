@@ -6,6 +6,7 @@ import type {
 } from "openai/resources/responses/responses";
 
 import { AnswerDepth } from "./AnswerDepth.js";
+import { AnswerDiagnostics } from "./AnswerDiagnostics.js";
 import { AnswerSources } from "./AnswerSources.js";
 import { type CalypsoApiConfig, requireApiKey } from "./CalypsoApiConfig.js";
 
@@ -19,6 +20,8 @@ export type AgentQuestion = {
   readonly conversationId: string;
   /** How much work the answer is worth; the agent's own default when absent. */
   readonly depth?: AnswerDepth;
+  /** Bucket ids or slugs to limit this answer to, up to five. */
+  readonly buckets?: readonly string[];
 };
 
 export type AgentAnswer = {
@@ -28,6 +31,8 @@ export type AgentAnswer = {
   readonly sources: AnswerSources;
   /** The depth the API reports it answered at, which a plan may cap. */
   readonly depth?: AnswerDepth;
+  /** Why retrieval could not run as asked, and which buckets were left out. */
+  readonly diagnostics: AnswerDiagnostics;
 };
 
 /**
@@ -111,6 +116,13 @@ export class AgentResponses {
   }
 
   private static metadataFor(question: AgentQuestion): Record<string, unknown> {
+    const aicore: Record<string, unknown> = {
+      // Named files are retrieved from, not pasted into the prompt whole.
+      ...(question.fileIds?.length
+        ? { file_input_strategy: "rag_policy" }
+        : {}),
+      ...(question.buckets?.length ? { buckets: [...question.buckets] } : {}),
+    };
     return {
       tool: "mcp",
       agent: question.agentId,
@@ -118,10 +130,7 @@ export class AgentResponses {
       ...(question.depth
         ? { response_policy: question.depth.responsePolicy }
         : {}),
-      // Named files are retrieved from, not pasted into the prompt whole.
-      ...(question.fileIds?.length
-        ? { _aicore: { file_input_strategy: "rag_policy" } }
-        : {}),
+      ...(Object.keys(aicore).length ? { _aicore: aicore } : {}),
     };
   }
 
@@ -133,6 +142,7 @@ export class AgentResponses {
     let responseId: string | null = null;
     let sources = AnswerSources.none();
     let depth: AnswerDepth | undefined;
+    let diagnostics = AnswerDiagnostics.none();
 
     for await (const event of stream) {
       if (
@@ -155,9 +165,10 @@ export class AgentResponses {
         }
         sources = AnswerSources.fromResponse(event.response);
         depth = AnswerDepth.used(event.response);
+        diagnostics = AnswerDiagnostics.fromResponse(event.response);
       }
     }
 
-    return { text, responseId, sources, depth };
+    return { text, responseId, sources, depth, diagnostics };
   }
 }

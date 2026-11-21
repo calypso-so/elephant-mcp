@@ -127,7 +127,7 @@ One server does everything, and you decide how much. When you connect, you choos
 
 | Tool | What it does |
 |---|---|
-| `elephant-ask` | Answers from your documents, with sources. `depth` (`fast`, `balanced`, `deep`) sets how much work the answer gets. Each question stands alone |
+| `elephant-ask` | Answers from every bucket you have, with sources, including one created a moment ago. `buckets` limits it to up to five; `depth` (`fast`, `balanced`, `deep`) sets how much work the answer gets. Each question stands alone |
 | `elephant-search` | The matching passages in full and where they live, no answer written |
 | `elephant-list-buckets` | Your buckets (folders of sources), to aim a search |
 | `elephant-open-source` | One source's details: name, type, size, and whether it is ready |

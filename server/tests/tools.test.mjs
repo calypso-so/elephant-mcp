@@ -281,7 +281,7 @@ test("an attachment cannot be combined with another source or lack an https link
   assert.equal(insecure.isError, true);
 });
 
-test("elephant-ask streams one stateless question to the default agent", async () => {
+test("elephant-ask streams one stateless question to the connector agent", async () => {
   const sse = [
     { type: "response.output_text.delta", delta: "Refunds within " },
     { type: "response.output_text.delta", delta: "14 days [1]." },
@@ -309,7 +309,8 @@ test("elephant-ask streams one stateless question to the default agent", async (
     "Bearer sk-test",
   );
   const body = calls[0].body;
-  assert.equal(body.model, "elephant-agent");
+  // No `model`: the connection's own agent, which reads every bucket.
+  assert.equal(body.model, "elephant-agent:mcp");
   assert.equal(body.stream, true);
   assert.match(body.conversation.id, /^conv_[0-9a-f]{32}$/);
   assert.equal(body.previous_response_id, undefined);
@@ -634,6 +635,152 @@ test("elephant-list-buckets calls the bucket endpoint with the caller's key", as
     new Headers(calls[0].init.headers).get("Authorization"),
     "Bearer sk-test",
   );
+});
+
+function sseOf(completed, text = "Returns within 30 days.") {
+  return [
+    { type: "response.output_text.delta", delta: text },
+    { type: "response.completed", response: { id: "resp_9", ...completed } },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
+}
+
+const stream = (body) =>
+  new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "text/event-stream" },
+  });
+
+test("elephant-ask with a named agent asks exactly that agent", async () => {
+  const calls = stubCalypso(() => stream(sseOf({})));
+  const client = await connect(ToolPresetRegistry.elephant);
+  await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "hi", model: "elephant-agent:sales" },
+  });
+  assert.equal(calls[0].body.model, "elephant-agent:sales");
+});
+
+test("elephant-ask falls back to the default agent on an API that does not know the connector agent", async () => {
+  let call = 0;
+  const calls = stubCalypso(() =>
+    call++ === 0
+      ? json(
+          {
+            error: {
+              message: "The model does not exist.",
+              code: "model_not_found",
+            },
+          },
+          404,
+        )
+      : stream(sseOf({})),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "hi" },
+  });
+  assert.equal(result.isError, undefined);
+  assert.deepEqual(
+    calls.map((c) => c.body.model),
+    ["elephant-agent:mcp", "elephant-agent"],
+  );
+});
+
+test("elephant-ask sends named buckets to the API", async () => {
+  const calls = stubCalypso(() => stream(sseOf({})));
+  const client = await connect(ToolPresetRegistry.elephant);
+  await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "openings?", buckets: ["chess", " "] },
+  });
+  assert.deepEqual(calls[0].body.metadata._aicore, { buckets: ["chess"] });
+});
+
+test("elephant-ask says why retrieval refused, instead of relaying 'not enough information'", async () => {
+  stubCalypso(() =>
+    stream(
+      sseOf(
+        {
+          metadata: {
+            _aicore: { answer_failure_code: "attached_source_outside_scope" },
+          },
+        },
+        "I don't have enough information to answer that.",
+      ),
+    ),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-ask",
+    arguments: {
+      prompt: "chess?",
+      model: "elephant-agent:sales",
+      fileIds: ["k1"],
+    },
+  });
+  assert.equal(result.isError, true);
+  assert.match(text(result), /bucket the agent named in `model` does not read/);
+  assert.doesNotMatch(text(result), /enough information/);
+});
+
+test("elephant-ask names the buckets it did not search", async () => {
+  stubCalypso((url) =>
+    url.endsWith("/knowledge/buckets")
+      ? json({
+          team_id: "t1",
+          buckets: [
+            { id: "b1", name: "Policies" },
+            { id: "b7", name: "Chess" },
+          ],
+        })
+      : stream(
+          sseOf({
+            metadata: {
+              _aicore: {
+                bucket_coverage: {
+                  searched: ["b2", "b3", "b4", "b5", "b7"],
+                  unsearched: ["b1", "b6"],
+                },
+              },
+            },
+          }),
+        ),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const answer = text(
+    await client.callTool({ name: "elephant-ask", arguments: { prompt: "q" } }),
+  );
+  assert.match(answer, /Searched 5 of 7 buckets/);
+  assert.match(answer, /Not searched: Policies, b6\./);
+});
+
+test("elephant-search with no agent or buckets searches every bucket, with a fallback", async () => {
+  let call = 0;
+  const calls = stubCalypso(() =>
+    call++ === 0
+      ? json(
+          { error: { code: "agent_not_found", message: "Unknown agent: mcp" } },
+          404,
+        )
+      : json({
+          object: "search.results",
+          query: "q",
+          strategy: "s",
+          results: [],
+          usage: {},
+        }),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-search",
+    arguments: { query: "openings" },
+  });
+  assert.equal(result.isError, undefined);
+  assert.equal(calls[0].body.agent, "elephant-agent:mcp");
+  assert.equal(calls[1].body.agent, undefined);
 });
 
 test("elephant-list-buckets names the sources in each bucket", async () => {

@@ -11,8 +11,15 @@ Use `elephant-ask` when the user wants an answer drawn from their team's own kno
 
 - `prompt` (required): the user's question in full, with any constraints ("in two sentences", "as a table", "only from the 2026 price list").
 - `fileIds` (optional): ids of sources the answer must take into account, when the user points at specific sources you found with `elephant-list-buckets` or `elephant-search`. The answer may still use other sources. If the call fails because an id is unknown, ask again without `fileIds`.
-- `model` (optional): a specific Elephant agent variant, only when the user names one. Leave it empty to use the team's default.
+- `model` (optional): a specific Elephant agent variant, only when the user names one. Leave it empty: Elephant then answers from every bucket the user has, including one created a moment ago.
+- `buckets` (optional): up to 5 bucket ids or slugs, when the user names a folder or topic that matches a bucket ("from my Chess notes"). Leave it empty otherwise; Elephant finds the buckets with evidence itself.
 - `depth` (optional): how much work the answer gets. Leave it empty for the agent's own default.
+
+## When the reply is not an answer
+
+- A reply that ends "Searched 5 of N buckets … Not searched: …" read the buckets with the strongest match. If the user expects the answer in one it did not search, ask again with that bucket in `buckets`.
+- A tool error that names `model`, `fileIds` or `buckets` says exactly what to change. Do it and ask once more; do not tell the user the knowledge is missing.
+- A newly saved file answers once it finishes indexing, usually within a minute. If the reply says sources are still indexing, wait and ask again.
 
 ## Choosing a depth
 

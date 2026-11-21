@@ -37,7 +37,10 @@ export class CalypsoApiClient {
     });
     const body = await readResponseBody(response);
     if (!response.ok) {
-      throw new Error(formatApiError(response.status, body));
+      throw new CalypsoApiError(
+        response.status,
+        formatApiError(response.status, body),
+      );
     }
     return body as T;
   }
@@ -50,5 +53,16 @@ export class CalypsoApiClient {
         : { "Content-Type": "application/json" }),
       ...request.headers,
     };
+  }
+}
+
+/** A non-2xx answer from the Calypso API, with its status kept for callers that branch on it. */
+export class CalypsoApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "CalypsoApiError";
   }
 }
