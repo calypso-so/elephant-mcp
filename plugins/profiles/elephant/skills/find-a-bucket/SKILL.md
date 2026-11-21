@@ -11,7 +11,7 @@ A bucket is a folder of sources Elephant remembers: files and websites the team 
 
 - The user asks what Elephant knows, or which buckets exist.
 - The user names a bucket ("search only HR policies") and you need its id or slug for `elephant-search`.
-- You need source ids to look one up with `elephant-open-source`.
+- You need a source's id to look it up with `elephant-open-source`. Each bucket lists its sources by id and name, so find the id by the name the user gave. Tell the user the name, not the id.
 
 ## How to call it
 

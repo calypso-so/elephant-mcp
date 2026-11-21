@@ -10,9 +10,9 @@ Use `elephant-open-source` to look up one source by its id: what it is and wheth
 ## Where the id comes from
 
 - `elephant-search` results carry a `file_id` for each passage from a file.
-- `elephant-list-buckets` lists the source ids in each bucket.
+- `elephant-list-buckets` lists the sources in each bucket by id and name.
 
-If the user names a source by title, search for it first with `elephant-search`, then open the matching `file_id`.
+If the user names a source by title, find it by name in `elephant-list-buckets` and open its id. Fall back to `elephant-search` only when the bucket list does not name it.
 
 ## How to call it
 

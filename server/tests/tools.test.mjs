@@ -449,7 +449,7 @@ test("elephant-ask closes with the depth the answer got", async () => {
     const { answer } = await askAtDepth(undefined, effort);
     assert.equal(
       answer,
-      `Returns within 30 days.\n\nAnswered at depth: ${name}.`,
+      `Returns within 30 days.\n\nAnswered at depth: ${name} (the agent's default; pass \`depth\` as \`fast\`, \`balanced\` or \`deep\` to choose).`,
     );
   }
   // An effort the API does not report, or one this server does not know.
@@ -559,6 +559,81 @@ test("elephant-list-buckets calls the bucket endpoint with the caller's key", as
     new Headers(calls[0].init.headers).get("Authorization"),
     "Bearer sk-test",
   );
+});
+
+test("elephant-list-buckets names the sources in each bucket", async () => {
+  const calls = stubCalypso((url) => {
+    if (url.endsWith("/knowledge/buckets")) {
+      return json({
+        team_id: "t1",
+        buckets: [
+          { id: "b1", name: "Policies", fileIds: ["k1", "k2"] },
+          { id: "b2", name: "Empty" },
+          { id: "b3", name: "Broken", fileIds: ["k9"] },
+        ],
+      });
+    }
+    if (url.includes("/buckets/b3/sources")) return json({}, 500);
+    return json({
+      sources: [
+        { id: "k1", type: "file", title: "Refund-Policy.pdf", ready: true },
+        { id: "k2", type: "page", title: "", ready: false },
+      ],
+      total: 2,
+      has_more: false,
+    });
+  });
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-list-buckets",
+    arguments: {},
+  });
+  assert.equal(result.isError, undefined);
+  const { buckets } = JSON.parse(text(result));
+  assert.deepEqual(buckets[0].sources, [
+    { id: "k1", name: "Refund-Policy.pdf", type: "file", ready: true },
+    // A source without a title is still listed, under its id.
+    { id: "k2", name: "k2", type: "page", ready: false },
+  ]);
+  assert.equal(buckets[0].moreSources, false);
+  // An empty bucket is not asked about; a failing one keeps its ids.
+  assert.deepEqual(buckets[1].sources, []);
+  assert.equal(buckets[2].sources, undefined);
+  assert.deepEqual(buckets[2].fileIds, ["k9"]);
+  assert.deepEqual(calls.map((call) => call.url.replace(API_BASE, "")).sort(), [
+    "/buckets/b1/sources?limit=50",
+    "/buckets/b3/sources?limit=50",
+    "/knowledge/buckets",
+  ]);
+
+  const countsOnly = stubCalypso(() =>
+    json({ team_id: "t1", buckets: [{ id: "b1", fileIds: ["k1"] }] }),
+  );
+  await client.callTool({
+    name: "elephant-list-buckets",
+    arguments: { includeSources: false },
+  });
+  assert.equal(countsOnly.length, 1);
+});
+
+test("elephant-ask explains a file id the API does not know", async () => {
+  stubCalypso(() => json({ detail: "File not found" }, 404));
+  const client = await connect(ToolPresetRegistry.elephant);
+  const named = await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "What is the refund window?", fileIds: ["nope"] },
+  });
+  assert.equal(named.isError, true);
+  assert.match(text(named), /not a source in this team's knowledge/);
+  assert.match(text(named), /elephant-list-buckets/);
+
+  // Without file ids a 404 is something else: left as the API said it.
+  const plain = await client.callTool({
+    name: "elephant-ask",
+    arguments: { prompt: "What is the refund window?" },
+  });
+  assert.equal(plain.isError, true);
+  assert.doesNotMatch(text(plain), /not a source in this team's knowledge/);
 });
 
 test("API errors come back as tool errors carrying the typed code", async () => {

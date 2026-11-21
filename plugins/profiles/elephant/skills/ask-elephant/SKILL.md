@@ -10,7 +10,7 @@ Use `elephant-ask` when the user wants an answer drawn from their team's own kno
 ## How to call it
 
 - `prompt` (required): the user's question in full, with any constraints ("in two sentences", "as a table", "only from the 2026 price list").
-- `fileIds` (optional): source ids to focus on, when the user points at specific sources you found with `elephant-list-buckets` or `elephant-search`.
+- `fileIds` (optional): ids of sources the answer must take into account, when the user points at specific sources you found with `elephant-list-buckets` or `elephant-search`. The answer may still use other sources. If the call fails because an id is unknown, ask again without `fileIds`.
 - `model` (optional): a specific Elephant agent variant, only when the user names one. Leave it empty to use the team's default.
 - `depth` (optional): how much work the answer gets. Leave it empty for the agent's own default.
 
@@ -25,7 +25,7 @@ Pick the depth from the question, not from habit. Deeper is slower, and a simple
 | `deep` | Comparing or reconciling several sources, or an answer the user will act on | the slowest |
 
 - Start at the lowest depth that fits.
-- Every reply ends with "Answered at depth: …". Read it before deciding what to do next.
+- Every reply ends with "Answered at depth: …". Read it before deciding what to do next. When the user asks for a depth, pass it as `depth`; do not switch to `elephant-search` to get a faster answer.
 - If the answer is thin, misses part of the question, or says the sources do not cover something the user expects to be there, ask once more **one depth higher**. Never repeat a call at the same depth.
 - If the reply says it was answered at a lower depth than you asked for, the team's plan caps depth there. Do not retry higher; work with that answer.
 - Only after `deep` (or the plan's cap) comes back empty, follow the `elephant-doesnt-know` skill.

@@ -22,7 +22,7 @@ const inputSchema = {
     .array(z.string())
     .optional()
     .describe(
-      "Optional file ids (from elephant-list-buckets) to focus the answer on specific sources.",
+      "Optional source ids (from elephant-list-buckets or a search result) that the answer must take into account. The answer may still draw on the agent's other sources; to read only certain buckets, use elephant-search with `buckets`.",
     ),
   model: z
     .string()
@@ -92,13 +92,17 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
       fileCount: fileIds?.length ?? 0,
     });
 
-    const answer = await api.agent.ask({
-      agentId,
-      prompt: args.prompt.trim(),
-      fileIds,
-      conversationId,
-      depth: asked,
-    });
+    const answer = await api.agent
+      .ask({
+        agentId,
+        prompt: args.prompt.trim(),
+        fileIds,
+        conversationId,
+        depth: asked,
+      })
+      .catch((error: unknown) => {
+        throw AskTool.readable(error, fileIds);
+      });
 
     await log.event("info", "Calypso agent answered.", {
       tool: this.name,
@@ -131,10 +135,30 @@ export class AskTool extends ElephantTool<typeof inputSchema> {
     used: AnswerDepth | undefined,
   ): string {
     if (!used) return "";
-    if (asked && used.isShallowerThan(asked)) {
+    if (!asked) {
+      // Said in the reply because a client may hold a tool list from before
+      // `depth` existed, and would otherwise report that it cannot be set.
+      return `Answered at depth: ${used.name} (the agent's default; pass \`depth\` as \`fast\`, \`balanced\` or \`deep\` to choose).`;
+    }
+    if (used.isShallowerThan(asked)) {
       return `Answered at depth: ${used.name} (asked for ${asked.name}; this team's plan caps depth here, so a higher depth will not change the answer).`;
     }
     return `Answered at depth: ${used.name}.`;
+  }
+
+  /**
+   * A file id the API does not know arrives as a bare 404. Say what it means
+   * and what to do, since "404 status code (no body)" tells the caller nothing.
+   */
+  private static readable(
+    error: unknown,
+    fileIds: readonly string[] | undefined,
+  ): unknown {
+    const status = (error as { status?: unknown } | null)?.status;
+    if (status !== 404 || !fileIds?.length) return error;
+    return new Error(
+      "One of the `fileIds` is not a source in this team's knowledge. Use ids from elephant-list-buckets, or ask again without `fileIds`.",
+    );
   }
 
   /** Whether the answer text already ends in its own list of sources. */
