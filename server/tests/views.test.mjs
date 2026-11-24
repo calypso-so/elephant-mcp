@@ -412,3 +412,34 @@ test("no tool hands back what only Calypso needs", async () => {
   assert.ok(logs.length > 0, "the client received log lines");
   assert.doesNotMatch(JSON.stringify(logs), /principal|gid_secret_1/);
 });
+
+test("a failure keeps its code and its advice, and loses what only Calypso traces", async () => {
+  stubCalypso(() =>
+    json(
+      {
+        error: {
+          code: "bucket_not_found",
+          message: `No bucket "hr" behind ${STORE}/documents/d1.`,
+          details: {
+            request_id: "req_err_1",
+            available: ["policies", "product-docs"],
+            task_id: "task_1",
+            api_key_id: "key_rec_1",
+          },
+        },
+      },
+      404,
+    ),
+  );
+  const client = await connect(ToolPresetRegistry.elephant);
+  const result = await client.callTool({
+    name: "elephant-open-source",
+    arguments: { fileId: "k1" },
+  });
+  assert.equal(result.isError, true);
+  assert.equal(
+    text(result),
+    'Error: Opening the source failed. Request failed with status 404: bucket_not_found: No bucket "hr" behind the index. details={"available":["policies","product-docs"]}',
+  );
+  assert.doesNotMatch(text(result), INTERNAL);
+});

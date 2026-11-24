@@ -556,7 +556,7 @@ test("waitForKnowledgeFileIndexed explains queued public upload timeout", async 
           "file-queued",
           "task-queued",
         ),
-      /did not start or finish before timeout.*may still finish.*file_id=file-queued.*task_id=task-queued/,
+      /did not start or finish before timeout.*may still finish.*file_id=file-queued$/,
     );
   } finally {
     globalThis.fetch = originalFetch;

@@ -19,10 +19,18 @@ export class ToolLogger {
     level: LogLevel,
     message: string,
     data: Record<string, unknown> = {},
+    /** Kept in the server's log only: what a client is not shown. */
+    serverOnly: Record<string, unknown> = {},
   ): Promise<void> {
     if (level === "error") {
       console.error(
-        JSON.stringify({ level, message, principal: this.principal, ...data }),
+        JSON.stringify({
+          level,
+          message,
+          principal: this.principal,
+          ...data,
+          ...serverOnly,
+        }),
       );
     }
     try {

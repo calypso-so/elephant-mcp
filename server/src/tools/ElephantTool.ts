@@ -5,6 +5,7 @@ import type {
 import type { z } from "zod";
 
 import type { ToolGroup } from "../presets/ToolGroup.js";
+import { ErrorView } from "../views/ErrorView.js";
 import type { ToolContext } from "./ToolContext.js";
 
 export type InputShape = Record<string, z.ZodTypeAny>;
@@ -67,11 +68,14 @@ export abstract class ElephantTool<Shape extends InputShape = InputShape> {
     try {
       return ElephantTool.result(await this.run(args, context));
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      await context.log.event("error", `${this.name} failed.`, {
-        tool: this.name,
-        error: message,
-      });
+      const detail = error instanceof Error ? error.message : String(error);
+      const message = ErrorView.of(detail);
+      await context.log.event(
+        "error",
+        `${this.name} failed.`,
+        { tool: this.name, error: message },
+        { detail },
+      );
       return {
         isError: true,
         content: [{ type: "text", text: `Error: ${this.failure} ${message}` }],

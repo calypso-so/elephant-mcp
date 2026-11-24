@@ -76,7 +76,8 @@ src/
     ToolContext.ts, ToolLogger.ts, schemaParts.ts
   views/                 what a tool answers: one view per kind of record (SourceView, BucketView,
                          BatchView, WebsiteView, SearchView, MoveView), each naming the fields it
-                         returns. No API record is handed to a client as it is
+                         returns. No API record is handed to a client as it is. ErrorView
+                         clears a failure of ids and index paths
   presets/               ToolPreset + ToolPresetRegistry: each endpoint's path, scope and tools;
                          ToolGroup (read, add, organise) and PresetInstructions, which decide
                          what one caller is offered and told
@@ -92,7 +93,7 @@ Each request builds a fresh `ElephantMcpServer` bound to the caller's key, so to
 
 Uploads take a ChatGPT attachment (`file`, declared in `_meta["openai/fileParams"]`), a public `sourceUrl`, or `contentBase64`. An attachment's temporary download link is handed to Calypso to import, so the bytes never pass through this server. Nothing reads from the server's disk.
 
-Tools answer with views, not API records. The Calypso API's records also carry what only Calypso needs: which key added a file, index store and operation names, task and request ids, the workspace id. A view names each field it returns, so none of that reaches a client, including fields the API adds later.
+Tools answer with views, not API records. The Calypso API's records also carry what only Calypso needs: which key added a file, index store and operation names, task and request ids, the workspace id. A view names each field it returns, so none of that reaches a client, including fields the API adds later. Error messages keep their code and advice and lose the same things; the server's own log keeps them whole.
 
 Each caller (grant or API key) gets `ELEPHANT_REQUESTS_PER_MINUTE` requests per minute across both endpoints (default 120); over that, `429` with `Retry-After`.
 

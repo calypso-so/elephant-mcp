@@ -231,8 +231,7 @@ function statusOf(result: KnowledgeUploadResult): string {
 
 function describeIndexingTimeout(result: KnowledgeUploadResult): string {
   const fileId = result.file.id ? ` file_id=${result.file.id}` : "";
-  const taskId = result.task?.id ? ` task_id=${result.task.id}` : "";
   const status = statusOf(result);
   const statusText = status ? ` Last status: ${status}.` : "";
-  return `Upload accepted but indexing did not start or finish before timeout.${statusText} It may still finish; check the file again later.${fileId}${taskId}`;
+  return `Upload accepted but indexing did not start or finish before timeout.${statusText} It may still finish; check the file again later.${fileId}`;
 }
