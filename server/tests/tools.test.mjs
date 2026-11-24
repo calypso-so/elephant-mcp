@@ -826,7 +826,9 @@ test("elephant-list-buckets names the sources in each bucket", async () => {
   // An empty bucket is not asked about; a failing one keeps its ids.
   assert.deepEqual(buckets[1].sources, []);
   assert.equal(buckets[2].sources, undefined);
-  assert.deepEqual(buckets[2].fileIds, ["k9"]);
+  assert.deepEqual(buckets[2].source_ids, ["k9"]);
+  // The workspace id the API lists the buckets under is not repeated.
+  assert.equal(JSON.parse(text(result)).team_id, undefined);
   assert.deepEqual(calls.map((call) => call.url.replace(API_BASE, "")).sort(), [
     "/buckets/b1/sources?limit=50",
     "/buckets/b3/sources?limit=50",
@@ -964,7 +966,13 @@ test("elephant-create-bucket returns only declared fields as structured content"
     slug: "sales",
     status: "active",
   });
-  assert.equal(JSON.parse(text(result)).extra, true);
+  // The text is the bucket's view: nothing the view does not name.
+  assert.deepEqual(JSON.parse(text(result)), {
+    id: "b1",
+    name: "Sales",
+    slug: "sales",
+    status: "active",
+  });
 });
 
 test("elephant-add-files makes up a batch key when none is given", async () => {

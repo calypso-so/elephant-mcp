@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { MoveView } from "../views/MoveView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -68,6 +69,6 @@ export class MoveSourcesTool extends ElephantTool<typeof inputSchema> {
       requested: result.requested,
       moved: result.moved,
     });
-    return { json: result };
+    return { json: MoveView.of(result) };
   }
 }

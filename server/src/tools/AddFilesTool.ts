@@ -3,6 +3,7 @@ import { z } from "zod";
 import { BATCH_MAX_FILES } from "../calypso/BatchManifest.js";
 import { countBucketTargets } from "../calypso/BucketDestination.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { BatchView } from "../views/BatchView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -94,9 +95,9 @@ export class AddFilesTool extends ElephantTool<typeof inputSchema> {
     const batch = await api.batches.upload({ ...args, batchIdempotencyKey });
     await log.event("info", "Batch accepted.", {
       tool: this.name,
-      batchId: batch.batch_id ?? null,
+      batchId: batch.id ?? null,
       status: batch.status ?? null,
     });
-    return { json: batch };
+    return { json: BatchView.of(batch) };
   }
 }

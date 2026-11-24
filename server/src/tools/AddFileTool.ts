@@ -3,6 +3,7 @@ import { z } from "zod";
 import { countBucketTargets } from "../calypso/BucketDestination.js";
 import type { UploadKnowledgeFileParams } from "../calypso/KnowledgeFiles.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { SourceView } from "../views/SourceView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -108,7 +109,7 @@ export class AddFileTool extends ElephantTool<typeof inputSchema> {
       fileId: result.file.id,
       status: result.file.status || result.task?.status || null,
     });
-    return { json: result };
+    return { json: SourceView.added(result) };
   }
 
   /**

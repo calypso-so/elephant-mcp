@@ -19,7 +19,7 @@ If the user names a source by title, find it by name in `elephant-list-buckets` 
 - `fileId` (required): the source id.
 - `verify` (optional): `true` asks the index for its current state of the source. It is slower; use it only when the status looks stale or the user says a source is missing from answers.
 
-The result gives the file name, type, size, indexing status and its sync state in each bucket.
+The result gives the file name, type, size, the buckets it is in (`bucket_ids`), its indexing `status` and whether it is `ready` to answer from. With `verify`, `index_check` says whether the index holds it. A failed source carries a `failure` saying why.
 
 ## How to answer
 

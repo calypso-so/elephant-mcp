@@ -34,13 +34,13 @@ describe("Cli", () => {
       const { cli: tool, output } = cli(outDir);
       assert.equal(await tool.run(["build", "--profile", "all"]), 0, output.errors.join("\n"));
       hashes.push(
-        ["elephant-openai-2.0.0.zip", "elephant-builder-openai-1.0.1.zip"].map((zip) =>
+        ["elephant-openai-2.0.1.zip", "elephant-builder-openai-1.0.1.zip"].map((zip) =>
           Archiver.sha256(readFileSync(join(outDir, zip))),
         ),
       );
       assert.ok(existsSync(join(outDir, "elephant", "openai", ".codex-plugin", "plugin.json")));
       const sums = readFileSync(join(outDir, "SHA256SUMS.txt"), "utf8");
-      assert.match(sums, /^[0-9a-f]{64} {2}elephant-openai-2\.0\.0\.zip$/m);
+      assert.match(sums, /^[0-9a-f]{64} {2}elephant-openai-2\.0\.1\.zip$/m);
       assert.ok(output.lines.some((line) => line.includes("sha256")));
     }
     assert.deepEqual(hashes[0], hashes[1]);

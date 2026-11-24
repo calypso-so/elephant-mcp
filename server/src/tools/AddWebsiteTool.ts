@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { countBucketTargets } from "../calypso/BucketDestination.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { WebsiteView } from "../views/WebsiteView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -67,6 +68,6 @@ export class AddWebsiteTool extends ElephantTool<typeof inputSchema> {
       knowledgeId: website.knowledge_id ?? null,
       status: website.ingestion_status ?? null,
     });
-    return { json: website };
+    return { json: WebsiteView.of(website) };
   }
 }

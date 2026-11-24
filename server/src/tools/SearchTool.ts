@@ -6,6 +6,7 @@ import { MAX_EXTRA_QUERIES } from "../calypso/KnowledgeSearch.js";
 
 import { emptyKnowledgeAnswer } from "../hatching/HatchingCopy.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { SearchView } from "../views/SearchView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -105,6 +106,6 @@ export class SearchTool extends ElephantTool<typeof inputSchema> {
       strategy: result.strategy,
       resultCount: result.results.length,
     });
-    return { json: result };
+    return { json: SearchView.of(result) };
   }
 }

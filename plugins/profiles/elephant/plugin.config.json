@@ -1,7 +1,7 @@
 {
   "extends": "../../shared/plugin.config.json",
   "name": "elephant",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "PDF AI for your own documents. Save PDFs, notes, contracts, manuals and web pages, then ask them a question in ChatGPT and get an answer with the source cited. Search passages, organise your buckets and check a source. It never deletes.",
   "onboardingSkill": "elephant-get-started",
   "mcp": {

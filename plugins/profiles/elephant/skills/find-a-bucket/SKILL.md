@@ -18,14 +18,14 @@ A bucket is a folder of sources Elephant remembers: files and websites the team 
 - No arguments lists the team's active buckets.
 - `includeArchived: true` adds archived buckets. Use it only when the user asks about archived or old buckets.
 
-Each bucket comes back with its `id`, `name`, `slug`, member counts, whether its store is ready, and the ids of the sources it holds.
+Each bucket comes back with its `id`, `name`, `slug`, `description`, how many files and sources it holds, and its `sources`: each with an id, a name, a type and whether it is `ready`. `moreSources: true` means the bucket holds more than the ones named.
 
 ## How to answer
 
 - List buckets by name, with how many sources each holds. Show ids or slugs only when the user needs them.
 - Cite the bucket list as the source of what you report ("according to Elephant's bucket list").
 - Match the user's wording to a bucket name loosely ("HR" can mean "HR policies"); if two buckets could match, ask which one.
-- If a bucket is not ready yet, say its sources may still be indexing.
+- If a source is not `ready` yet, say it is still indexing and will not appear in answers yet.
 
 ## What Elephant does not do
 

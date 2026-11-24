@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { BucketView } from "../views/BucketView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -62,6 +63,6 @@ export class RenameBucketTool extends ElephantTool<typeof inputSchema> {
       tool: this.name,
       bucketId: typeof bucket.id === "string" ? bucket.id : null,
     });
-    return { json: bucket };
+    return { json: BucketView.of(bucket) };
   }
 }

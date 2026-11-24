@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { BucketView } from "../views/BucketView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -61,16 +62,17 @@ export class CreateBucketTool extends ElephantTool<typeof inputSchema> {
       tool: this.name,
       bucketId: typeof bucket.id === "string" ? bucket.id : null,
     });
+    const view = BucketView.of(bucket);
     return {
-      json: bucket,
-      structured: CreateBucketTool.declaredFields(bucket),
+      json: view,
+      structured: CreateBucketTool.declaredFields(view),
     };
   }
 
   /**
-   * Structured output is checked strictly against `outputSchema`, but the
-   * API adds fields over time. Only the declared fields go in the structured
-   * part; the full payload stays in the text.
+   * Structured output is checked strictly against `outputSchema`: only the
+   * declared fields go in the structured part. The text carries the bucket's
+   * view, which also has its description.
    */
   private static declaredFields(
     bucket: Record<string, unknown>,

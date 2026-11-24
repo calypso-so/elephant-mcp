@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { SourceView } from "../views/SourceView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -26,7 +27,7 @@ export class OpenSourceTool extends ElephantTool<typeof inputSchema> {
   readonly name = "elephant-open-source";
   readonly title = "Open a source";
   readonly description = [
-    "Returns one source's details by file id: name, type, size and whether it is ready to answer from.",
+    "Returns one source's details by file id: name, type, size, the buckets it is in and whether it is ready to answer from.",
     "",
     "Use it when the user asks about a specific source cited in an answer or listed by elephant-list-buckets.",
   ].join("\n");
@@ -44,6 +45,7 @@ export class OpenSourceTool extends ElephantTool<typeof inputSchema> {
     args: ToolArgs<typeof inputSchema>,
     { api }: ToolContext,
   ): Promise<ToolOutput> {
-    return { json: await api.files.get(args.fileId, { verify: args.verify }) };
+    const file = await api.files.get(args.fileId, { verify: args.verify });
+    return { json: SourceView.of(file) };
   }
 }

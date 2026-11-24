@@ -1,9 +1,9 @@
 /**
  * Shapes of the Calypso knowledge API's answers.
  *
- * Every type is open (`[key: string]: unknown`): tools pass these through to
- * the client as JSON, so a field the API adds later reaches the model without
- * a change here.
+ * Every type is open (`[key: string]: unknown`) because the API adds fields
+ * over time. None of these is ever handed to a client as it is: each tool
+ * answers with a view (`src/views`) that names the fields it returns.
  */
 
 export type KnowledgeTaskObject = {

@@ -27,7 +27,7 @@ Each result is one whole matching passage, and a short document is a single pass
 
 ## Reading the result
 
-Each result carries a `source_index`, the whole passage as `text`, sometimes a `quote` (the line in the passage that matched most closely), a `title`, and where it came from: `filename` and `file_id` for files, `url` for websites. Results are ordered by relevance.
+Each result carries a `source_index`, the whole passage as `text`, sometimes a `quote` (the line in the passage that matched most closely), a `title`, and where it came from: `filename` and `file_id` for files, `url` for websites, and the `page` or `location` when the document has one. Results are ordered by relevance.
 
 ## Cite every passage
 

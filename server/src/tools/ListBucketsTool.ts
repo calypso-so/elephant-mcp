@@ -1,8 +1,8 @@
 import { z } from "zod";
-import type { BucketSource } from "../calypso/BucketSources.js";
 import type { KnowledgeBucketDescriptor } from "../calypso/bucketList.js";
 import type { CalypsoApi } from "../calypso/CalypsoApi.js";
 import { ToolGroup } from "../presets/ToolGroup.js";
+import { BucketView, type PublicListedBucket } from "../views/BucketView.js";
 import {
   ElephantTool,
   type ToolArgs,
@@ -21,13 +21,6 @@ const inputSchema = {
     .describe(
       "Name the sources in each bucket (id, name, type, ready). Defaults to true; pass false for counts only.",
     ),
-};
-
-/** A bucket with the sources in it named, where they could be read. */
-type BucketWithSources = KnowledgeBucketDescriptor & {
-  sources?: BucketSource[];
-  /** True when the bucket holds more sources than were named. */
-  moreSources?: boolean;
 };
 
 /** `elephant-list-buckets`: what Elephant knows about, folder by folder. */
@@ -59,7 +52,7 @@ export class ListBucketsTool extends ElephantTool<typeof inputSchema> {
     });
     const buckets =
       args.includeSources === false
-        ? list.buckets
+        ? list.buckets.map((bucket) => BucketView.listed(bucket))
         : await Promise.all(
             list.buckets.map((bucket) => ListBucketsTool.named(api, bucket)),
           );
@@ -67,7 +60,7 @@ export class ListBucketsTool extends ElephantTool<typeof inputSchema> {
       tool: this.name,
       bucketCount: list.buckets.length,
     });
-    return { json: { ...list, buckets } };
+    return { json: { buckets } };
   }
 
   /**
@@ -78,15 +71,18 @@ export class ListBucketsTool extends ElephantTool<typeof inputSchema> {
   private static async named(
     api: CalypsoApi,
     bucket: KnowledgeBucketDescriptor,
-  ): Promise<BucketWithSources> {
+  ): Promise<PublicListedBucket> {
     if (bucket.knowledgeIds.length === 0 && bucket.fileIds.length === 0) {
-      return { ...bucket, sources: [] };
+      return BucketView.listed(bucket, { sources: [] });
     }
     try {
       const page = await api.bucketSources.firstPage(bucket.id);
-      return { ...bucket, sources: page.sources, moreSources: page.hasMore };
+      return BucketView.listed(bucket, {
+        sources: page.sources,
+        moreSources: page.hasMore,
+      });
     } catch {
-      return bucket;
+      return BucketView.listed(bucket);
     }
   }
 }

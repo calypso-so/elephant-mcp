@@ -12,7 +12,7 @@ const PROFILES = [
     listingTitle: "Elephant: PDF AI & Docs Q&A",
     serverName: "elephant",
     url: "https://mcp.calypso.so/elephant/mcp",
-    version: "2.0.0",
+    version: "2.0.1",
     tools: [
       "elephant-ask",
       "elephant-search",

@@ -3,7 +3,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 export type LogLevel = "debug" | "info" | "notice" | "warning" | "error";
 
 /**
- * Structured logs for one tool call, sent to the MCP client and to stdout.
+ * Structured logs for one tool call: sent to the MCP client, and errors to
+ * the server's own log with the caller's principal.
  *
  * Callers log identifiers, counts and statuses only. Prompts, file bytes and
  * API keys never reach a log line.
@@ -19,13 +20,18 @@ export class ToolLogger {
     message: string,
     data: Record<string, unknown> = {},
   ): Promise<void> {
-    const entry = { message, principal: this.principal, ...data };
-    if (level === "error") console.error(JSON.stringify({ level, ...entry }));
+    if (level === "error") {
+      console.error(
+        JSON.stringify({ level, message, principal: this.principal, ...data }),
+      );
+    }
     try {
+      // The client is told what happened, not who the caller is to Calypso:
+      // the principal (a grant or key reference) stays in the server's log.
       await this.server?.server.sendLoggingMessage({
         level,
         logger: "elephant",
-        data: entry,
+        data: { message, ...data },
       });
     } catch {
       // Logging is best-effort and must never break a tool call.
