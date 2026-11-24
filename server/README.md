@@ -97,6 +97,12 @@ Tools answer with views, not API records. The Calypso API's records also carry w
 
 Each caller (grant or API key) gets `ELEPHANT_REQUESTS_PER_MINUTE` requests per minute across both endpoints (default 120); over that, `429` with `Retry-After`.
 
+## MCP Registry
+
+The server is listed in the official [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.calypso-so/elephant-mcp-server`. [`server.json`](./server.json) is what the registry holds: the hosted endpoint and this npm package. Its `name` and `version` must equal `mcpName` and `version` in `package.json` (`tests/registry.test.mjs` keeps them together), so a release bumps both files.
+
+After a push to `main` publishes the package to npm, the `Publish to MCP Registry` workflow publishes the same version to the registry, signing in with GitHub OIDC. A version already listed is skipped.
+
 ## Commands
 
 ```bash

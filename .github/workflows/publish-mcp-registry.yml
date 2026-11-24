@@ -1,0 +1,133 @@
+name: Publish to MCP Registry
+
+# Lists the server in the official MCP Registry (registry.modelcontextprotocol.io)
+# under io.github.calypso-so/elephant-mcp-server. The registry holds metadata
+# only: server/server.json, which names the hosted endpoint and the npm package.
+#
+# It runs after "Publish to npm" because the registry checks that the npm
+# package of the same version carries the matching `mcpName`. Signing in is by
+# GitHub OIDC: the organisation namespace is proved by the repository itself,
+# so there is no token or key to keep.
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Publish to npm
+    branches:
+      - main
+    types:
+      - completed
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish registry metadata
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    defaults:
+      run:
+        working-directory: server
+    env:
+      # Pinned on purpose, and verified below. Raise it deliberately.
+      MCP_PUBLISHER_VERSION: v1.8.16
+      REGISTRY_URL: https://registry.modelcontextprotocol.io
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - run: npm ci
+
+      # server.json and package.json must name the same server and version.
+      - name: Check registry metadata
+        run: npm run build && node --test tests/registry.test.mjs
+
+      - name: Wait for the npm package
+        run: |
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          EXPECTED="$(node -p "require('./server.json').name")"
+          for attempt in $(seq 1 20); do
+            FOUND="$(npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" mcpName 2>/dev/null || true)"
+            if [ "${FOUND}" = "${EXPECTED}" ]; then
+              echo "${PACKAGE_NAME}@${PACKAGE_VERSION} is on npm with mcpName ${FOUND}."
+              exit 0
+            fi
+            echo "Waiting for ${PACKAGE_NAME}@${PACKAGE_VERSION} on npm (attempt ${attempt}/20)..."
+            sleep 15
+          done
+          echo "${PACKAGE_NAME}@${PACKAGE_VERSION} with mcpName ${EXPECTED} is not on npm."
+          exit 1
+
+      # A version is published once: the registry refuses the same one twice.
+      - name: Check the registry for this version
+        id: registry
+        run: |
+          NAME="$(node -p "encodeURIComponent(require('./server.json').name)")"
+          VERSION="$(node -p "encodeURIComponent(require('./server.json').version)")"
+          STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "${REGISTRY_URL}/v0.1/servers/${NAME}/versions/${VERSION}")"
+          case "${STATUS}" in
+            200) echo "published=true" >> "$GITHUB_OUTPUT"; echo "Already in the registry; nothing to publish." ;;
+            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "The registry answered ${STATUS}."; exit 1 ;;
+          esac
+
+      - name: Install cosign
+        if: steps.registry.outputs.published == 'false'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download and verify mcp-publisher
+        if: steps.registry.outputs.published == 'false'
+        run: |
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
+
+      - name: Validate server.json
+        if: steps.registry.outputs.published == 'false'
+        run: ./mcp-publisher validate
+
+      - name: Sign in to the MCP Registry
+        if: steps.registry.outputs.published == 'false'
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to the MCP Registry
+        if: steps.registry.outputs.published == 'false'
+        run: ./mcp-publisher publish
+
+      - name: Confirm the listing
+        run: |
+          NAME="$(node -p "encodeURIComponent(require('./server.json').name)")"
+          VERSION="$(node -p "encodeURIComponent(require('./server.json').version)")"
+          for attempt in $(seq 1 20); do
+            STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "${REGISTRY_URL}/v0.1/servers/${NAME}/versions/${VERSION}")"
+            if [ "${STATUS}" = "200" ]; then
+              echo "Listed: ${REGISTRY_URL}/v0.1/servers/${NAME}/versions/${VERSION}"
+              exit 0
+            fi
+            echo "Waiting for the listing (attempt ${attempt}/20, last answer ${STATUS})..."
+            sleep 15
+          done
+          echo "The listing did not appear."
+          exit 1

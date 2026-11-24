@@ -1,0 +1,61 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.calypso-so/elephant-mcp-server",
+  "title": "Elephant: PDF AI & Docs Q&A",
+  "description": "PDF AI for your own documents: ask from any MCP client and get answers that cite the source.",
+  "version": "1.3.3",
+  "websiteUrl": "https://www.calypso.so/elephant",
+  "repository": {
+    "url": "https://github.com/calypso-so/elephant-mcp",
+    "source": "github",
+    "subfolder": "server"
+  },
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/calypso-so/elephant-mcp/main/plugins/shared/assets/icon.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.calypso.so/elephant/mcp"
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@calypsohq/elephant-mcp-server",
+      "version": "1.3.3",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CALYPSO_API_KEY",
+          "description": "Your Calypso project API key. It decides which workspace Elephant reads and what it may do.",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "ELEPHANT_PRESET",
+          "description": "Which tools to publish: all ten, the four read tools, or the four save tools.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "default": "all",
+          "choices": ["all", "elephant", "elephant-builder"]
+        },
+        {
+          "name": "CALYPSO_API_BASE_URL",
+          "description": "Optional Calypso API base URL. Defaults to https://api.calypso.so/v1.",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
