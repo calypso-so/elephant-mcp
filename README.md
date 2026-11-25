@@ -13,6 +13,7 @@
 <a href="#how-it-works"><img src="https://img.shields.io/badge/auth-OAuth_2.1_%2B_PKCE-E9C4A8?style=flat-square" alt="OAuth 2.1 + PKCE"></a>
 <a href="#license"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
 <a href="https://glama.ai/mcp/servers/calypso-so/elephant-mcp"><img src="https://glama.ai/mcp/servers/calypso-so/elephant-mcp/badges/score.svg" alt="Elephant MCP server on Glama"></a>
+<a href="https://glama.ai/mcp/connectors/io.github.calypso-so/elephant-mcp-server"><img src="https://glama.ai/mcp/connectors/io.github.calypso-so/elephant-mcp-server/badges/score.svg" alt="Elephant MCP connector on Glama"></a>
 
 <table>
 <tr>
