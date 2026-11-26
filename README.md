@@ -8,12 +8,15 @@
 
 *An elephant never forgets.*
 
+<a href="https://chatgpt.com/plugins/plugin_asdk_app_6afcc7102b508191b4a5d134d6d70bfc"><img src="https://img.shields.io/badge/ChatGPT-official_plugin-171611?style=flat-square" alt="Elephant in ChatGPT's plugin directory"></a>
 <a href="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml"><img src="https://github.com/calypso-so/elephant-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-Streamable_HTTP-3B2622?style=flat-square" alt="MCP Streamable HTTP"></a>
 <a href="#how-it-works"><img src="https://img.shields.io/badge/auth-OAuth_2.1_%2B_PKCE-E9C4A8?style=flat-square" alt="OAuth 2.1 + PKCE"></a>
 <a href="#license"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License: MIT"></a>
 <a href="https://glama.ai/mcp/servers/calypso-so/elephant-mcp"><img src="https://glama.ai/mcp/servers/calypso-so/elephant-mcp/badges/score.svg" alt="Elephant MCP server on Glama"></a>
 <a href="https://glama.ai/mcp/connectors/io.github.calypso-so/elephant-mcp-server"><img src="https://glama.ai/mcp/connectors/io.github.calypso-so/elephant-mcp-server/badges/score.svg" alt="Elephant MCP connector on Glama"></a>
+
+<a href="#see-it-work"><img src="docs/screenshots/cited-answer.png" alt="Elephant answering a question about a refund policy in a chat, with the answer's key sentence highlighted and the source shown as Refund-Policy.pdf, page 1" width="100%"></a>
 
 <table>
 <tr>
@@ -24,7 +27,7 @@
 </tr>
 </table>
 
-**[What people use it for](#what-people-use-it-for) · [Install](#install) · [Pick your server](#pick-your-server) · [First minute](#first-minute) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
+**[See it work](#see-it-work) · [What people use it for](#what-people-use-it-for) · [ChatGPT plugin](#the-official-chatgpt-plugin) · [Install](#install) · [Pick your server](#pick-your-server) · [First minute](#first-minute) · [How it works](#how-it-works) · [Privacy](#privacy) · [Build](#build) · [Deploy](#deploy) · [License](#license)**
 
 </div>
 
@@ -53,6 +56,39 @@
 
 **Same question. One guess, one answer with its source.** <sub>Illustrative example.</sub>
 
+## See it work
+
+Four things Elephant does that a pasted PDF cannot.
+
+<table>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/screenshots/passage-search.png" alt="A search for warranty coverage period returning two passages from Warranty-Terms.pdf, each with the matching sentence highlighted and its page number" width="100%">
+<h3>The exact passage, not a summary of it</h3>
+<code>elephant-search</code> returns the wording as the document has it, with the line that matched and the page it is on.
+</td>
+<td width="50%" valign="top">
+<img src="docs/screenshots/several-documents.png" alt="One answer about descaling a kettle that cites two files, a product guide and the warranty terms, each with its page" width="100%">
+<h3>One answer, drawn from several documents</h3>
+<code>elephant-ask</code> reads across everything you saved and names every file it used, each with its page.
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+<img src="docs/screenshots/says-when-it-does-not-know.png" alt="Elephant replying that it could not find a parental leave policy in the saved documents, with the label No sources cited" width="100%">
+<h3>It says when it does not know</h3>
+No answers from thin air. When your documents do not cover a question, Elephant tells you so and cites nothing.
+</td>
+<td width="50%" valign="top">
+<img src="docs/screenshots/buckets.png" alt="Five buckets, among them Product docs, Policies and Onboarding, each listing its sources and whether they are ready" width="100%">
+<h3>Buckets keep your knowledge tidy</h3>
+Group sources by team, client or project. Your AI can save into them and reorganise them. It can never delete them.
+</td>
+</tr>
+</table>
+
+<sub>Real answers, recorded from a demo workspace of fictional documents.</sub>
+
 ## What people use it for
 
 Save a file once, ask it any time, from whichever AI you already use. Elephant searches the text, tables and images in what you saved and answers only from them.
@@ -74,7 +110,27 @@ Save a file once, ask it any time, from whichever AI you already use. Elephant s
 - **Fast or deep, your call.** A quick lookup takes a few seconds; a comparison across several documents gets more work when you ask for it.
 - **A second brain with nothing to configure.** It is retrieval-augmented generation (RAG) over your own documents, without a vector database, an embedding model or a pipeline to run.
 
+## The official ChatGPT plugin
+
+<a href="https://chatgpt.com/plugins/plugin_asdk_app_6afcc7102b508191b4a5d134d6d70bfc"><img src="docs/screenshots/chatgpt-plugin.png" alt="Elephant's listing in ChatGPT's plugin directory: Elephant: PDF AI & Docs Q&A, Ask your PDFs, with sources, an Install plugin button, three starter prompts, developer Calypso, category Productivity" width="100%"></a>
+
+**[Elephant: PDF AI & Docs Q&A](https://chatgpt.com/plugins/plugin_asdk_app_6afcc7102b508191b4a5d134d6d70bfc)** is in ChatGPT's plugin directory, published by Calypso and reviewed by OpenAI before it was listed. Install it once and any ChatGPT chat can answer from your PDFs, notes and web pages, with the file and the page on every answer. No key to paste, nothing to install on your computer.
+
+1. **Install** the plugin from ChatGPT's directory.
+2. **Sign in** and choose: read only, or also save and organise.
+3. **Ask** in any chat. The answer names the file and the page.
+
+<div align="center">
+
+<a href="https://chatgpt.com/plugins/plugin_asdk_app_6afcc7102b508191b4a5d134d6d70bfc"><img src="https://img.shields.io/badge/Install_in_ChatGPT-171611?style=for-the-badge" alt="Install Elephant in ChatGPT"></a>
+
+<sub>Needs an Elephant account. It never deletes your files.</sub>
+
+</div>
+
 ## Install
+
+<img src="docs/screenshots/one-url-ten-tools.png" alt="The hosted endpoint https://mcp.calypso.so/elephant/mcp beside Elephant's ten tools in three groups: read, save and organise" width="100%">
 
 Elephant is a hosted MCP server. You give your client one URL; it opens a sign-in, you pick a team and press Allow. No download, no key to paste, nothing to keep secret.
 
@@ -84,9 +140,9 @@ https://mcp.calypso.so/elephant/mcp
 
 | Client | How |
 |---|---|
+| **ChatGPT** | Install [Elephant: PDF AI & Docs Q&A](https://chatgpt.com/plugins/plugin_asdk_app_6afcc7102b508191b4a5d134d6d70bfc) from ChatGPT's plugin directory, then sign in |
 | **Claude Code** | `claude mcp add --scope user --transport http elephant https://mcp.calypso.so/elephant/mcp`, then open the sign-in link it prints |
 | **Claude Desktop, Cursor, Windsurf, and others** | Add a remote (Streamable HTTP) server with the URL above; the client discovers sign-in on its own |
-| **ChatGPT** | Settings → Apps → developer mode → add an app with the URL above |
 | **Any MCP client** | Streamable HTTP + OAuth 2.1 with dynamic registration and PKCE. If it can talk to a remote MCP server, it can talk to Elephant |
 
 Hand-written config, where a client wants one:
