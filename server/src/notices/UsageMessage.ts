@@ -27,6 +27,8 @@ export type ServerIdentity = {
 };
 
 const TEXT_LIMIT = 500;
+/** Slack's limit for one section field: label, newline and escaped value together. */
+const FIELD_TEXT_LIMIT = 2000;
 
 /**
  * Builds the Slack post for one call, or null when the tool is not noticed.
@@ -70,7 +72,8 @@ export function buildUsageMessage(
   }
 
   return {
-    text: `Elephant used · ${call.tool}${headline} · ${caller}`,
+    // Escaped like the fields: the headline is the caller's own text.
+    text: escapeMrkdwn(`Elephant used · ${call.tool}${headline} · ${caller}`),
     blocks: [
       {
         type: "header",
@@ -195,10 +198,18 @@ function fieldSections(fields: Field[]): Record<string, unknown>[] {
   for (let start = 0; start < present.length; start += 10) {
     blocks.push({
       type: "section",
-      fields: present.slice(start, start + 10).map((field) => ({
-        type: "mrkdwn",
-        text: `*${escapeMrkdwn(field.label)}*\n${escapeMrkdwn(truncate(field.value, TEXT_LIMIT))}`,
-      })),
+      fields: present.slice(start, start + 10).map((field) => {
+        const label = `*${escapeMrkdwn(field.label)}*\n`;
+        return {
+          type: "mrkdwn",
+          text:
+            label +
+            fitEscaped(
+              truncate(field.value, TEXT_LIMIT),
+              FIELD_TEXT_LIMIT - label.length,
+            ),
+        };
+      }),
     });
   }
   return blocks;
@@ -229,6 +240,25 @@ function truncate(value: string, max: number): string {
   const normalized = value.trim();
   if (normalized.length <= max) return normalized;
   return `${normalized.slice(0, Math.max(0, max - 1))}…`;
+}
+
+/**
+ * `value` escaped and cut so the escaped text fits `budget`: escaping expands
+ * (`&` becomes five characters), so a value cut before escaping can still
+ * pass a Slack limit. Cuts between characters, never inside an entity.
+ */
+function fitEscaped(value: string, budget: number): string {
+  const whole = escapeMrkdwn(value);
+  if (whole.length <= budget) return whole;
+  let used = 0;
+  let end = 0;
+  for (const char of value) {
+    const escaped = escapeMrkdwn(char);
+    if (used + escaped.length > budget - 1) break;
+    used += escaped.length;
+    end += char.length;
+  }
+  return `${escapeMrkdwn(value.slice(0, end).trimEnd())}…`;
 }
 
 function escapeMrkdwn(value: string): string {

@@ -52,7 +52,7 @@ test("an ask posts the question, the caller and the outcome, never a result", ()
   const message = buildUsageMessage(CALL, SERVER);
   assert.equal(
     message.text,
-    "Elephant used · elephant-ask · What does the S-1 say about <Starlink> & launch? · grant:g1 · team team-abc · client client-xyz · person user-123…",
+    "Elephant used · elephant-ask · What does the S-1 say about &lt;Starlink&gt; &amp; launch? · grant:g1 · team team-abc · client client-xyz · person user-123…",
   );
   assert.deepEqual(message.blocks[0], {
     type: "header",
@@ -340,4 +340,17 @@ test("a tool call on the server is reported once it has its result, and a quiet 
   assert.equal(typeof calls[1].durationMs, "number");
   await client.close();
   await server.close();
+});
+
+test("an escape-heavy input stays inside Slack's 2,000-character field limit and the fallback text is escaped", () => {
+  const message = buildUsageMessage(
+    { ...CALL, args: { prompt: "&".repeat(500) } },
+    SERVER,
+  );
+  const question = fieldsOf(message).Question;
+  assert.ok(`*Question*\n${question}`.length <= 2000);
+  assert.ok(question.endsWith("…"));
+  assert.doesNotMatch(question, /&[a-z]*…$/);
+  assert.equal(message.text.includes("<"), false);
+  assert.ok(message.text.startsWith("Elephant used · elephant-ask · &amp;"));
 });
