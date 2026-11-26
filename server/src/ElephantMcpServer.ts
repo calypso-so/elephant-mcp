@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { GrantFacts } from "./auth/Credential.js";
 import { GrantScopes } from "./auth/GrantScopes.js";
 import type { AgentCatalogSnapshot } from "./calypso/AgentCatalog.js";
 import { AgentCatalog } from "./calypso/AgentCatalog.js";
@@ -9,6 +10,11 @@ import {
   type KnowledgeInventorySummary,
 } from "./calypso/KnowledgeInventory.js";
 import { hatchingCard, hatchingInstructions } from "./hatching/HatchingCopy.js";
+import {
+  NoUsageNotices,
+  type ToolCall,
+  type UsageNotices,
+} from "./notices/UsageNotices.js";
 import type { ToolPreset } from "./presets/ToolPreset.js";
 import type { ElephantTool } from "./tools/ElephantTool.js";
 import type { ToolContext } from "./tools/ToolContext.js";
@@ -35,6 +41,10 @@ export type ElephantMcpServerOptions = {
    * server, a raw API key) offers every tool of the preset.
    */
   readonly scopes?: readonly string[];
+  /** The grant's non-secret facts, for the operator notices. */
+  readonly grant?: GrantFacts;
+  /** Told after each tool call. Absent (stdio, tests), nobody is told. */
+  readonly notices?: UsageNotices;
 };
 
 export const GET_STARTED_PROMPT = "elephant-get-started";
@@ -76,16 +86,32 @@ export function createElephantMcpServer(
     agents: new AgentCatalog(options.agents),
     inventory: new KnowledgeInventory(inventory, () => api.buckets.list()),
     log: new ToolLogger(server, options.principal),
+    notices: options.notices ?? new NoUsageNotices(),
   };
-  for (const tool of preset.toolsFor(grant)) register(server, tool, context);
+  const caller = {
+    principal: options.principal,
+    scopes: options.scopes ?? [],
+    grant: options.grant,
+  };
+  for (const tool of preset.toolsFor(grant)) {
+    register(server, tool, context, caller);
+  }
   if (preset.hatches) registerGetStarted(server, context);
   return server;
 }
 
+type Caller = Pick<ToolCall, "principal" | "scopes" | "grant">;
+
+/**
+ * Registers the tool and tells the notices how each call went, once it has
+ * its result: the tool's own error handling has already turned a failure
+ * into an `isError` result, so the outcome is read from that.
+ */
 function register(
   server: McpServer,
   tool: ElephantTool,
   context: ToolContext,
+  caller: Caller,
 ): void {
   server.registerTool(
     tool.name,
@@ -99,7 +125,18 @@ function register(
         ? { _meta: { "openai/fileParams": [...tool.fileParams] } }
         : {}),
     },
-    (args) => tool.call(args, context),
+    async (args) => {
+      const startedAt = performance.now();
+      const result = await tool.call(args, context);
+      context.notices.toolCalled({
+        tool: tool.name,
+        args,
+        outcome: result.isError ? "error" : "ok",
+        durationMs: performance.now() - startedAt,
+        ...caller,
+      });
+      return result;
+    },
   );
 }
 

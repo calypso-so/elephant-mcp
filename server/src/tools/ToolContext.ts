@@ -1,11 +1,13 @@
 import type { AgentCatalog } from "../calypso/AgentCatalog.js";
 import type { CalypsoApi } from "../calypso/CalypsoApi.js";
 import type { KnowledgeInventory } from "../calypso/KnowledgeInventory.js";
+import type { UsageNotices } from "../notices/UsageNotices.js";
 import type { ToolLogger } from "./ToolLogger.js";
 
 /**
  * Everything a tool needs for one request: the Calypso API as the caller,
- * the caller's agents, what the team has in Elephant, and a logger.
+ * the caller's agents, what the team has in Elephant, a logger, and the
+ * operator notices told after each call.
  *
  * Built per request from the caller's credential, so a tool can never reach
  * another caller's key or data.
@@ -15,4 +17,5 @@ export type ToolContext = {
   readonly agents: AgentCatalog;
   readonly inventory: KnowledgeInventory;
   readonly log: ToolLogger;
+  readonly notices: UsageNotices;
 };

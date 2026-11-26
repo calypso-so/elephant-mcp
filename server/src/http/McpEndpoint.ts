@@ -9,6 +9,7 @@ import {
   createElephantMcpServer,
   type PackageInfo,
 } from "../ElephantMcpServer.js";
+import type { UsageNotices } from "../notices/UsageNotices.js";
 import type { ToolPreset } from "../presets/ToolPreset.js";
 import type { KnowledgeInventoryCache } from "./KnowledgeInventoryCache.js";
 import type { ModelCatalogCache } from "./ModelCatalogCache.js";
@@ -27,6 +28,8 @@ export type McpEndpointOptions = {
   readonly limiter: RateLimiter;
   readonly apiBaseUrl: string;
   readonly packageInfo: PackageInfo;
+  /** Told after each tool call; absent (the HTTP tests), nobody is told. */
+  readonly notices?: UsageNotices;
 };
 
 /** What one request to an endpoint came to: a served principal, or a refusal. */
@@ -97,6 +100,8 @@ export class McpEndpoint {
       packageInfo: this.options.packageInfo,
       principal: credential.principal,
       scopes: credential.scopes,
+      grant: credential.grant,
+      notices: this.options.notices,
     });
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,

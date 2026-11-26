@@ -77,7 +77,17 @@ export class JwtGrantStrategy implements AuthStrategy {
       );
     }
 
-    return { apiKey, principal: `grant:${claims.gid}`, scopes };
+    return {
+      apiKey,
+      principal: `grant:${claims.gid}`,
+      scopes,
+      grant: {
+        gid: String(claims.gid),
+        team: claims.team,
+        cid: claims.cid,
+        sub: claims.sub,
+      },
+    };
   }
 }
 

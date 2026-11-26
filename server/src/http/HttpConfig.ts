@@ -19,6 +19,7 @@ const DEFAULT_REQUESTS_PER_MINUTE = 120;
  * | CALYPSO_API_BASE_URL       | Calypso API base URL (…/v1)                          |
  * | ELEPHANT_REQUESTS_PER_MINUTE | per-caller request budget (default 120)            |
  * | ELEPHANT_OPENAI_CHALLENGE_TOKEN | OpenAI plugin portal domain-verification token (public) |
+ * | ELEPHANT_SLACK_WEBHOOK_URL | Slack incoming webhook told about each noticed tool call; unset = no notices |
  */
 export class HttpConfig {
   private constructor(
@@ -31,6 +32,7 @@ export class HttpConfig {
     readonly maxBodyBytes: number,
     readonly requestsPerMinute: number,
     readonly openaiChallengeToken: string | undefined,
+    readonly slackWebhookUrl: string | undefined,
   ) {}
 
   static fromEnv(env: NodeJS.ProcessEnv): HttpConfig {
@@ -54,6 +56,7 @@ export class HttpConfig {
         "ELEPHANT_REQUESTS_PER_MINUTE",
       ),
       env.ELEPHANT_OPENAI_CHALLENGE_TOKEN?.trim() || undefined,
+      env.ELEPHANT_SLACK_WEBHOOK_URL?.trim() || undefined,
     );
   }
 

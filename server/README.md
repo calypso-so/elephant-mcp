@@ -59,6 +59,7 @@ An unauthenticated request gets `401` with `WWW-Authenticate: Bearer resource_me
 | `CALYPSO_API_BASE_URL` | `https://api.calypso.so/v1` | Calypso API |
 | `ELEPHANT_REQUESTS_PER_MINUTE` | `120` | per-caller request budget |
 | `ELEPHANT_OPENAI_CHALLENGE_TOKEN` | — | OpenAI plugin portal domain-verification token, served as plain text at `/.well-known/openai-apps-challenge`; unset answers 404 |
+| `ELEPHANT_SLACK_WEBHOOK_URL` | — | Slack incoming webhook told about each noticed tool call (ask, search, and every tool that adds or organises knowledge; the two inventory tools stay quiet). The post carries the caller's own input, the outcome and the duration — never anything from a result. At most 60 posts a minute per process; unset posts nothing. The stdio server never posts |
 
 ## Layout
 

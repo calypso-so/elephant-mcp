@@ -6,6 +6,8 @@ import { BearerAuthenticator } from "../auth/BearerAuthenticator.js";
 import { JwtGrantStrategy } from "../auth/JwtGrantStrategy.js";
 import { TokenCipher } from "../auth/TokenCipher.js";
 import type { PackageInfo } from "../ElephantMcpServer.js";
+import { SlackUsageNotices } from "../notices/SlackUsageNotices.js";
+import { NoUsageNotices, type UsageNotices } from "../notices/UsageNotices.js";
 import { ToolPresetRegistry } from "../presets/ToolPresetRegistry.js";
 import type { HttpConfig } from "./HttpConfig.js";
 import { HttpServer } from "./HttpServer.js";
@@ -47,6 +49,13 @@ export function composeHostedServer(
   const catalogs = new ModelCatalogCache();
   const inventories = new KnowledgeInventoryCache();
   const limiter = new RateLimiter(config.requestsPerMinute);
+  // One channel hears every noticed tool call; without a webhook nobody does.
+  const notices: UsageNotices = config.slackWebhookUrl
+    ? new SlackUsageNotices(config.slackWebhookUrl, {
+        version: packageInfo.version,
+        publicBaseUrl: config.publicBaseUrl,
+      })
+    : new NoUsageNotices();
   const endpoints = ToolPresetRegistry.all().map(
     (preset) =>
       new McpEndpoint({
@@ -57,6 +66,7 @@ export function composeHostedServer(
         limiter,
         apiBaseUrl: config.apiBaseUrl,
         packageInfo,
+        notices,
       }),
   );
 

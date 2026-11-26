@@ -25,3 +25,6 @@ services:
         value: "-o3i46cR3iSRrLrF4CbJ1ZVRq0xO8IyLXDa8GvvkaZg"
       - key: ELEPHANT_TOKEN_ENC_KEY
         sync: false
+      # Slack incoming webhook for the operator channel; set in the dashboard.
+      - key: ELEPHANT_SLACK_WEBHOOK_URL
+        sync: false
