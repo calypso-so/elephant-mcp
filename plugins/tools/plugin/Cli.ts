@@ -170,9 +170,24 @@ export class Cli {
     return { command, profile, online };
   }
 
+  /**
+   * Takes `--root <dir>` out of the arguments. It names another packaging
+   * root (`profiles/`, `shared/`, `slugs.json`) to build with this tool;
+   * without it the tool packages the root it lives in.
+   */
+  static takeRoot(argv: readonly string[]): { root?: string; rest: string[] } {
+    const rest = [...argv];
+    const at = rest.findIndex((arg) => arg === "--root" || arg.startsWith("--root="));
+    if (at < 0) return { rest };
+    const flag = rest[at] as string;
+    const root = flag === "--root" ? rest.splice(at, 2)[1] : rest.splice(at, 1)[0]?.slice("--root=".length);
+    if (!root) throw new Error("--root needs a directory");
+    return { root, rest };
+  }
+
   static readonly USAGE = [
     "usage:",
-    "  npm run build -- --profile <elephant|elephant-builder|all>",
-    "  npm run validate -- [--online] --profile <elephant|elephant-builder|all>",
+    "  npm run build -- --profile <name|all> [--root <dir>]",
+    "  npm run validate -- [--online] --profile <name|all> [--root <dir>]",
   ].join("\n");
 }

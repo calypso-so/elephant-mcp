@@ -25,6 +25,8 @@ npm test                                   # node --test over tests/plugin
 npm run lint                               # strict tsc, no emit
 ```
 
+Another product's listing is built with the same tool: `--root <dir>` names its packaging root, a folder with its own `profiles/`, `shared/` and a `slugs.json` (the names its profiles are checked against, in the shape of `SlugTable`'s `Slugs`). WhatsApp Agent by Calypso is packaged this way, from `plugins/` in its own repository. Without `--root` the tool packages this folder and checks it against the table in `SlugTable.ts`.
+
 A build exits non-zero if any rule reports an error. Warnings (today: the missing `demo_recording_url`) do not fail the build. `--profile all` also writes `out/SHA256SUMS.txt`.
 
 ## Layout

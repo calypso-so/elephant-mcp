@@ -25,7 +25,8 @@ export class NamingRule implements Rule {
 
   async check(view: PackageView, profile: Profile): Promise<Finding[]> {
     const out = new FindingList(this.id);
-    const entry = SlugTable.find(profile.name);
+    const slugs = SlugTable.forProfile(profile.directory);
+    const entry = slugs.entries.find((candidate) => candidate.package === profile.name);
     if (!entry) {
       out.error(`"${profile.name}" is not a package in the slug table`);
       return out.findings;
@@ -39,7 +40,7 @@ export class NamingRule implements Rule {
     NamingRule.expect(out, profile.displayName, entry.displayName, "interface.displayName (product name)", "plugin.config.json");
     NamingRule.expect(out, manifest.author?.name, SlugTable.AUTHOR, "author.name", manifestPath);
     NamingRule.expect(out, ui.developerName, SlugTable.AUTHOR, "interface.developerName", manifestPath);
-    NamingRule.expect(out, ui.websiteURL, SlugTable.WEBSITE, "interface.websiteURL", manifestPath);
+    NamingRule.expect(out, ui.websiteURL, slugs.website, "interface.websiteURL", manifestPath);
 
     const mcp = view.json<{ mcpServers?: Record<string, { url?: string }> }>(OpenAITarget.MCP_PATH);
     const servers = Object.keys(mcp?.mcpServers ?? {});

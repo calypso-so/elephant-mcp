@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+
 export interface SlugEntry {
   readonly package: string;
   /** The product name, as written in prose. */
@@ -8,6 +11,12 @@ export interface SlugEntry {
   readonly endpoint: string;
   readonly scope: string;
   readonly tools: readonly string[];
+}
+
+/** What a packaging root is checked against: its website and its packages. */
+export interface Slugs {
+  readonly website: string;
+  readonly entries: readonly SlugEntry[];
 }
 
 /**
@@ -53,6 +62,20 @@ export class SlugTable {
       tools: ["elephant-add-file", "elephant-add-files", "elephant-add-website", "elephant-create-bucket"],
     },
   ];
+
+  /** A packaging root other than Elephant's keeps its table here, in the shape of {@link Slugs}. */
+  static readonly FILE = "slugs.json";
+
+  /**
+   * The table for the packaging root a profile lives in (`<root>/profiles/<name>`).
+   * Elephant's is the one above; another product's root, built with `--root`,
+   * brings its own in `slugs.json`.
+   */
+  static forProfile(directory: string): Slugs {
+    const path = join(resolve(directory, "..", ".."), SlugTable.FILE);
+    if (!existsSync(path)) return { website: SlugTable.WEBSITE, entries: SlugTable.ENTRIES };
+    return JSON.parse(readFileSync(path, "utf8")) as Slugs;
+  }
 
   static find(packageName: string): SlugEntry | undefined {
     return SlugTable.ENTRIES.find((entry) => entry.package === packageName);

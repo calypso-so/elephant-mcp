@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
 import { Archiver } from "../../tools/plugin/Archiver.js";
 import { Cli, type CliOutput } from "../../tools/plugin/Cli.js";
+import { SlugTable } from "../../tools/plugin/SlugTable.js";
 import { Fixtures } from "./Fixtures.js";
 
 class Capture implements CliOutput {
@@ -68,5 +69,32 @@ describe("Cli", () => {
       profile: "elephant",
       online: true,
     });
+  });
+});
+
+describe("another packaging root", () => {
+  const scratch = mkdtempSync(join(tmpdir(), "elephant-plugins-root-"));
+  after(() => rmSync(scratch, { recursive: true, force: true }));
+
+  it("takes --root out of the arguments, in both spellings", () => {
+    assert.deepEqual(Cli.takeRoot(["build", "--root", "/x", "--profile", "all"]), {
+      root: "/x",
+      rest: ["build", "--profile", "all"],
+    });
+    assert.deepEqual(Cli.takeRoot(["validate", "--profile", "p", "--root=/y"]), {
+      root: "/y",
+      rest: ["validate", "--profile", "p"],
+    });
+    assert.deepEqual(Cli.takeRoot(["build", "--profile", "all"]), { rest: ["build", "--profile", "all"] });
+    assert.throws(() => Cli.takeRoot(["build", "--root"]), /needs a directory/);
+  });
+
+  it("checks names against the root's own slugs.json, and Elephant's table without one", () => {
+    const profileDirectory = join(scratch, "profiles", "other");
+    assert.equal(SlugTable.forProfile(profileDirectory).entries, SlugTable.ENTRIES);
+    assert.equal(SlugTable.forProfile(profileDirectory).website, SlugTable.WEBSITE);
+    const own = { website: "https://www.calypso.so/other", entries: [{ package: "other" }] };
+    writeFileSync(join(scratch, SlugTable.FILE), JSON.stringify(own));
+    assert.deepEqual(SlugTable.forProfile(profileDirectory), own);
   });
 });
