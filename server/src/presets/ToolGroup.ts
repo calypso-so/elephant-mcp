@@ -38,6 +38,16 @@ export class ToolGroup {
   /** Completes "It cannot …" for a caller who does not. */
   readonly cannot: string;
 
+  /** A group for another server's tools; Elephant's own are the statics above. */
+  static define(options: {
+    id: string;
+    scope: string;
+    can: string;
+    cannot: string;
+  }): ToolGroup {
+    return new ToolGroup(options);
+  }
+
   private constructor(options: {
     id: string;
     scope: string;

@@ -1,6 +1,6 @@
-import type { ToolPreset } from "../presets/ToolPreset.js";
 import type { AuthChallenge } from "./AuthChallenge.js";
 import type { Credential } from "./Credential.js";
+import type { ProtectedResource } from "./ProtectedResource.js";
 
 /**
  * One way of turning a bearer token into a Credential.
@@ -13,6 +13,6 @@ export interface AuthStrategy {
   accepts(token: string): boolean;
   authenticate(
     token: string,
-    preset: ToolPreset,
+    preset: ProtectedResource,
   ): Promise<Credential | AuthChallenge>;
 }

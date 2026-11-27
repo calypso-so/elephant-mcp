@@ -1,4 +1,4 @@
-import type { ToolPreset } from "../presets/ToolPreset.js";
+import type { ProtectedResource } from "../auth/ProtectedResource.js";
 
 const WELL_KNOWN = "/.well-known/oauth-protected-resource";
 const DOCUMENTATION_URL = "https://www.calypso.so/elephant";
@@ -17,28 +17,28 @@ export class ProtectedResourceMetadata {
   ) {}
 
   /** Path this preset's document is served on. */
-  static pathFor(preset: ToolPreset): string {
+  static pathFor(preset: ProtectedResource): string {
     return `${WELL_KNOWN}${preset.path}`;
   }
 
   /** Whether the preset is OAuth-protected (and so has a document). */
-  static supports(preset: ToolPreset): boolean {
+  static supports(preset: ProtectedResource): boolean {
     return Boolean(preset.scope);
   }
 
-  urlFor(preset: ToolPreset): string | undefined {
+  urlFor(preset: ProtectedResource): string | undefined {
     if (!ProtectedResourceMetadata.supports(preset)) return undefined;
     return `${this.publicBaseUrl}${ProtectedResourceMetadata.pathFor(preset)}`;
   }
 
-  documentFor(preset: ToolPreset): Record<string, unknown> {
+  documentFor(preset: ProtectedResource): Record<string, unknown> {
     return {
       resource: preset.resourceUrl(this.publicBaseUrl),
       authorization_servers: [this.issuer],
       scopes_supported: preset.scopes(),
       bearer_methods_supported: ["header"],
       resource_name: preset.displayName,
-      resource_documentation: DOCUMENTATION_URL,
+      resource_documentation: preset.documentationUrl ?? DOCUMENTATION_URL,
     };
   }
 }

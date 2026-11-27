@@ -1,10 +1,18 @@
 {
   "name": "@calypsohq/elephant-mcp-server",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "mcpName": "io.github.calypso-so/elephant-mcp-server",
   "description": "Elephant: PDF AI and docs Q&A as an MCP server. Chat with your PDFs, documents and web pages from Claude, ChatGPT and Cursor, with every answer cited.",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./kit": {
+      "types": "./dist/kit.d.ts",
+      "default": "./dist/kit.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "elephant-mcp": "dist/stdio.js"
   },

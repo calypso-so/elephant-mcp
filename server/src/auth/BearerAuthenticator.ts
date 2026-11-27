@@ -1,7 +1,7 @@
-import type { ToolPreset } from "../presets/ToolPreset.js";
 import { AuthChallenge } from "./AuthChallenge.js";
 import type { AuthStrategy } from "./AuthStrategy.js";
 import type { Credential } from "./Credential.js";
+import type { ProtectedResource } from "./ProtectedResource.js";
 
 /**
  * Picks the strategy that recognizes the bearer token and runs it.
@@ -13,13 +13,13 @@ export class BearerAuthenticator {
   constructor(
     private readonly strategies: readonly AuthStrategy[],
     private readonly resourceMetadataUrl: (
-      preset: ToolPreset,
+      preset: ProtectedResource,
     ) => string | undefined,
   ) {}
 
   async authenticate(
     authorization: string | undefined,
-    preset: ToolPreset,
+    preset: ProtectedResource,
   ): Promise<Credential | AuthChallenge> {
     const metadataUrl = this.resourceMetadataUrl(preset);
     const token = BearerAuthenticator.bearerToken(authorization);

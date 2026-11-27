@@ -35,7 +35,16 @@ export class HttpConfig {
     readonly slackWebhookUrl: string | undefined,
   ) {}
 
-  static fromEnv(env: NodeJS.ProcessEnv): HttpConfig {
+  /**
+   * `prefix` names the product in the env keys (`ELEPHANT_PUBLIC_BASE_URL`,
+   * `WHATSAPP_PUBLIC_BASE_URL`, …) and `publicBaseUrl` is where that product
+   * is served when the env does not say. Both default to Elephant's.
+   */
+  static fromEnv(
+    env: NodeJS.ProcessEnv,
+    product: { prefix?: string; publicBaseUrl?: string } = {},
+  ): HttpConfig {
+    const prefix = product.prefix ?? "ELEPHANT";
     const issuer = stripSlash(env.CALYPSO_OAUTH_ISSUER) ?? DEFAULT_OAUTH_ISSUER;
     const apiBaseUrl =
       stripSlash(env.CALYPSO_API_BASE_URL) ?? DEFAULT_CALYPSO_API_BASE_URL;
@@ -44,19 +53,22 @@ export class HttpConfig {
     }
     return new HttpConfig(
       parsePort(env.PORT),
-      stripSlash(env.ELEPHANT_PUBLIC_BASE_URL) ?? DEFAULT_PUBLIC_BASE_URL,
+      stripSlash(env[`${prefix}_PUBLIC_BASE_URL`]) ??
+        product.publicBaseUrl ??
+        DEFAULT_PUBLIC_BASE_URL,
       issuer,
-      stripSlash(env.ELEPHANT_JWKS_URL) ?? `${issuer}/.well-known/jwks.json`,
-      env.ELEPHANT_TOKEN_ENC_KEY?.trim() || undefined,
+      stripSlash(env[`${prefix}_JWKS_URL`]) ??
+        `${issuer}/.well-known/jwks.json`,
+      env[`${prefix}_TOKEN_ENC_KEY`]?.trim() || undefined,
       apiBaseUrl,
       DEFAULT_MAX_BODY_BYTES,
       parsePositive(
-        env.ELEPHANT_REQUESTS_PER_MINUTE,
+        env[`${prefix}_REQUESTS_PER_MINUTE`],
         DEFAULT_REQUESTS_PER_MINUTE,
-        "ELEPHANT_REQUESTS_PER_MINUTE",
+        `${prefix}_REQUESTS_PER_MINUTE`,
       ),
-      env.ELEPHANT_OPENAI_CHALLENGE_TOKEN?.trim() || undefined,
-      env.ELEPHANT_SLACK_WEBHOOK_URL?.trim() || undefined,
+      env[`${prefix}_OPENAI_CHALLENGE_TOKEN`]?.trim() || undefined,
+      env[`${prefix}_SLACK_WEBHOOK_URL`]?.trim() || undefined,
     );
   }
 

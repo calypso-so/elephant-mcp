@@ -1,9 +1,9 @@
 import { errors, type JWTPayload, type JWTVerifyGetKey, jwtVerify } from "jose";
 
-import type { ToolPreset } from "../presets/ToolPreset.js";
 import { AuthChallenge } from "./AuthChallenge.js";
 import type { AuthStrategy } from "./AuthStrategy.js";
 import type { Credential } from "./Credential.js";
+import type { ProtectedResource } from "./ProtectedResource.js";
 import type { TokenCipher } from "./TokenCipher.js";
 
 const JWT_SHAPE = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
@@ -24,7 +24,7 @@ export type JwtGrantStrategyOptions = {
   /** Public base URL of this server; `aud` must be base + preset path. */
   publicBaseUrl: string;
   /** Builds the challenge's resource_metadata URL for a preset. */
-  resourceMetadataUrl: (preset: ToolPreset) => string;
+  resourceMetadataUrl: (preset: ProtectedResource) => string;
 };
 
 /**
@@ -44,7 +44,7 @@ export class JwtGrantStrategy implements AuthStrategy {
 
   async authenticate(
     token: string,
-    preset: ToolPreset,
+    preset: ProtectedResource,
   ): Promise<Credential | AuthChallenge> {
     const metadataUrl = this.options.resourceMetadataUrl(preset);
     let claims: GrantClaims;

@@ -5,8 +5,11 @@ import {
   type ServerResponse,
 } from "node:http";
 
-import type { EndpointOutcome, McpEndpoint } from "./McpEndpoint.js";
 import { ProtectedResourceMetadata } from "./ProtectedResourceMetadata.js";
+import type {
+  EndpointOutcome,
+  StatelessMcpEndpoint,
+} from "./StatelessMcpEndpoint.js";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +31,7 @@ class HttpError extends Error {
 }
 
 export type HttpServerOptions = {
-  endpoints: readonly McpEndpoint[];
+  endpoints: readonly StatelessMcpEndpoint[];
   metadata: ProtectedResourceMetadata;
   maxBodyBytes: number;
   version: string;
@@ -49,8 +52,8 @@ export type HttpServerOptions = {
  * sessions, so GET and DELETE on an endpoint answer 405.
  */
 export class HttpServer {
-  private readonly endpointsByPath: ReadonlyMap<string, McpEndpoint>;
-  private readonly metadataByPath: ReadonlyMap<string, McpEndpoint>;
+  private readonly endpointsByPath: ReadonlyMap<string, StatelessMcpEndpoint>;
+  private readonly metadataByPath: ReadonlyMap<string, StatelessMcpEndpoint>;
 
   constructor(private readonly options: HttpServerOptions) {
     this.endpointsByPath = new Map(

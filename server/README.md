@@ -98,6 +98,21 @@ Tools answer with views, not API records. The Calypso API's records also carry w
 
 Each caller (grant or API key) gets `ELEPHANT_REQUESTS_PER_MINUTE` requests per minute across both endpoints (default 120); over that, `429` with `Retry-After`.
 
+## Kit
+
+The parts of this server that are not about Elephant are exported as
+`@calypsohq/elephant-mcp-server/kit` ([`src/kit.ts`](src/kit.ts)): bearer authentication against
+Calypso's authorization server, the stateless endpoint (`StatelessMcpEndpoint`), the tool, group
+and preset base classes (`McpTool`, `ToolGroup`, `ToolPreset`), `ToolRegistrar`, the rate limiter,
+`HttpConfig` and the Calypso API client. Another Calypso MCP server builds on these and adds only
+its own tools:
+
+```ts
+import { McpTool, StatelessMcpEndpoint, ToolGroup, ToolPreset } from "@calypsohq/elephant-mcp-server/kit";
+```
+
+`tests/kit.test.mjs` stands a toy server up from the kit alone and pins the list of exports.
+
 ## MCP Registry
 
 The server is listed in the official [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.calypso-so/elephant-mcp-server`. [`server.json`](./server.json) is what the registry holds: the hosted endpoint and this npm package. Its `name` and `version` must equal `mcpName` and `version` in `package.json` (`tests/registry.test.mjs` keeps them together), so a release bumps both files.

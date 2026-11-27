@@ -19,6 +19,7 @@ import type { ToolPreset } from "./presets/ToolPreset.js";
 import type { ElephantTool } from "./tools/ElephantTool.js";
 import type { ToolContext } from "./tools/ToolContext.js";
 import { ToolLogger } from "./tools/ToolLogger.js";
+import { ToolRegistrar } from "./tools/ToolRegistrar.js";
 
 export type PackageInfo = { readonly name: string; readonly version: string };
 
@@ -102,41 +103,15 @@ export function createElephantMcpServer(
 
 type Caller = Pick<ToolCall, "principal" | "scopes" | "grant">;
 
-/**
- * Registers the tool and tells the notices how each call went, once it has
- * its result: the tool's own error handling has already turned a failure
- * into an `isError` result, so the outcome is read from that.
- */
+/** Registers the tool and tells the notices how each of its calls went. */
 function register(
   server: McpServer,
   tool: ElephantTool,
   context: ToolContext,
   caller: Caller,
 ): void {
-  server.registerTool(
-    tool.name,
-    {
-      title: tool.title,
-      description: tool.description,
-      inputSchema: tool.inputSchema,
-      ...(tool.outputSchema ? { outputSchema: tool.outputSchema } : {}),
-      annotations: tool.annotations,
-      ...(tool.fileParams?.length
-        ? { _meta: { "openai/fileParams": [...tool.fileParams] } }
-        : {}),
-    },
-    async (args) => {
-      const startedAt = performance.now();
-      const result = await tool.call(args, context);
-      context.notices.toolCalled({
-        tool: tool.name,
-        args,
-        outcome: result.isError ? "error" : "ok",
-        durationMs: performance.now() - startedAt,
-        ...caller,
-      });
-      return result;
-    },
+  ToolRegistrar.register(server, tool, context, (report) =>
+    context.notices.toolCalled({ ...report, ...caller }),
   );
 }
 
